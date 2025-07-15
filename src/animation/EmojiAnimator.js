@@ -22,13 +22,18 @@ class EmojiAnimator {
       DRIFT: 'drift',
       SWING: 'swing',
       TYPEWRITER: 'typewriter',
-      HOP: 'hop'
+      HOP: 'hop',
+      COMPLEX: 'complex' // Multi-emoji complex animations
     };
     
     // Performance monitoring
     this.performanceMode = 'high'; // high, medium, low
     this.frameCount = 0;
     this.lastFPSCheck = 0;
+    
+    // Complex animation system
+    this.complexAnimations = [];
+    this.smokeParticles = [];
     
     this.initializeAnimationMappings();
   }
@@ -65,6 +70,12 @@ class EmojiAnimator {
 
     // Select animation type based on character
     const animationType = this.selectAnimationType(key, randomEmoji);
+    
+    // Handle complex animations separately
+    if (animationType === this.animationTypes.COMPLEX) {
+      this.spawnComplexAnimation(key, randomEmoji, spawnX, spawnY);
+      return;
+    }
     
     const emoji = {
       emoji: randomEmoji,
@@ -235,6 +246,12 @@ class EmojiAnimator {
       // Draw emoji
       this.drawEmoji(emoji);
     }
+    
+    // Update and draw complex animations
+    this.updateComplexAnimations(deltaTime);
+    
+    // Update and draw smoke particles
+    this.updateSmokeParticles(deltaTime);
 
     requestAnimationFrame((time) => this.animate(time));
   }
@@ -259,6 +276,8 @@ class EmojiAnimator {
   dispose() {
     this.stop();
     this.emojis = [];
+    this.complexAnimations = [];
+    this.smokeParticles = [];
   }
 
   // Get current emoji count for performance monitoring
@@ -272,7 +291,7 @@ class EmojiAnimator {
       // Letters (A-Z)
       'A': [this.animationTypes.HOP, this.animationTypes.FLOAT], // Ant hops, Apple floats
       'B': [this.animationTypes.BOUNCE, this.animationTypes.FLOAT], // Ball bounces, Bear floats
-      'C': [this.animationTypes.WIGGLE, this.animationTypes.FLOAT], // Cat wiggle, Car floats
+      'C': [this.animationTypes.COMPLEX, this.animationTypes.WIGGLE], // Car complex, Cat wiggle
       'D': [this.animationTypes.WIGGLE, this.animationTypes.BOUNCE], // Dog wiggle, Ball bounces
       'E': [this.animationTypes.FLOAT, this.animationTypes.BURST], // Elephant float, Energy burst
       'F': [this.animationTypes.WIGGLE, this.animationTypes.BURST], // Fish wiggle, Fire burst
@@ -498,6 +517,10 @@ class EmojiAnimator {
       
       case this.animationTypes.HOP:
         this.updateHopAnimation(emoji, dt);
+        break;
+      
+      case this.animationTypes.COMPLEX:
+        // Complex animations are handled separately
         break;
       
       default:
@@ -733,6 +756,143 @@ class EmojiAnimator {
         this.performanceMode = 'high';
       }
     }
+  }
+
+  // Complex Animation System
+  spawnComplexAnimation(character, emoji, x, y) {
+    if (character === 'C' && (emoji === '🚗' || emoji === '🏎️')) {
+      this.spawnCarWithSmoke(emoji, x, y);
+    }
+    // Add more complex animations here for other characters
+  }
+
+  spawnCarWithSmoke(carEmoji, x, y) {
+    const carAnimation = {
+      id: Date.now() + Math.random(),
+      type: 'car_with_smoke',
+      car: {
+        emoji: carEmoji,
+        x: x,
+        y: y,
+        vx: 200 + Math.random() * 100, // Fast horizontal movement
+        vy: -50 + Math.random() * 30,   // Slight upward movement
+        rotation: 0,
+        rotationSpeed: 0,
+        scale: 1.0,
+        opacity: 1,
+        size: 56
+      },
+      smokeSpawnTimer: 0,
+      smokeSpawnInterval: 80, // Spawn smoke every 80ms
+      age: 0,
+      lifetime: 8000 // 8 seconds
+    };
+    
+    this.complexAnimations.push(carAnimation);
+  }
+
+  updateComplexAnimations(deltaTime) {
+    for (let i = this.complexAnimations.length - 1; i >= 0; i--) {
+      const animation = this.complexAnimations[i];
+      animation.age += deltaTime;
+      
+      if (animation.type === 'car_with_smoke') {
+        this.updateCarWithSmoke(animation, deltaTime);
+      }
+      
+      // Remove expired animations
+      if (animation.age >= animation.lifetime) {
+        this.complexAnimations.splice(i, 1);
+      }
+    }
+  }
+
+  updateCarWithSmoke(animation, deltaTime) {
+    const dt = deltaTime / 1000;
+    const car = animation.car;
+    
+    // Update car position
+    car.x += car.vx * dt;
+    car.y += car.vy * dt;
+    car.vy += 50 * dt; // Light gravity
+    
+    // Update opacity (fade out towards end)
+    car.opacity = Math.max(0, 1 - (animation.age / animation.lifetime));
+    
+    // Spawn smoke particles
+    animation.smokeSpawnTimer += deltaTime;
+    if (animation.smokeSpawnTimer >= animation.smokeSpawnInterval) {
+      this.spawnSmokeParticle(car.x - 20, car.y + 10); // Behind the car
+      animation.smokeSpawnTimer = 0;
+    }
+    
+    // Draw car
+    this.drawComplexEmoji(car);
+  }
+
+  spawnSmokeParticle(x, y) {
+    const smokeParticle = {
+      emoji: '💨',
+      x: x + (Math.random() - 0.5) * 20,
+      y: y + (Math.random() - 0.5) * 10,
+      vx: -30 + Math.random() * 20, // Drift backward
+      vy: -20 + Math.random() * 40, // Slight upward drift
+      rotation: 0,
+      rotationSpeed: (Math.random() - 0.5) * 2,
+      scale: 0.3 + Math.random() * 0.4, // Smaller smoke particles
+      opacity: 0.8,
+      lifetime: 2000 + Math.random() * 1000, // 2-3 seconds
+      age: 0,
+      size: 32,
+      expansionRate: 0.5 // Smoke expands over time
+    };
+    
+    this.smokeParticles.push(smokeParticle);
+  }
+
+  updateSmokeParticles(deltaTime) {
+    for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
+      const particle = this.smokeParticles[i];
+      const dt = deltaTime / 1000;
+      
+      // Update particle
+      particle.age += deltaTime;
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+      particle.vy += 30 * dt; // Light gravity
+      particle.rotation += particle.rotationSpeed * dt;
+      
+      // Expand and fade smoke
+      const ageRatio = particle.age / particle.lifetime;
+      particle.scale += particle.expansionRate * dt;
+      particle.opacity = Math.max(0, 0.8 * (1 - ageRatio));
+      
+      // Remove expired particles
+      if (particle.age >= particle.lifetime || particle.opacity <= 0) {
+        this.smokeParticles.splice(i, 1);
+        continue;
+      }
+      
+      // Draw smoke particle
+      this.drawComplexEmoji(particle);
+    }
+  }
+
+  drawComplexEmoji(emojiObj) {
+    this.ctx.save();
+    
+    this.ctx.globalAlpha = emojiObj.opacity;
+    this.ctx.translate(emojiObj.x, emojiObj.y);
+    this.ctx.rotate(emojiObj.rotation);
+    this.ctx.scale(emojiObj.scale, emojiObj.scale);
+    
+    this.ctx.font = `${emojiObj.size}px Arial`;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    
+    this.ctx.fillText(emojiObj.emoji, 0, 0);
+    
+    this.ctx.restore();
   }
 }
 
