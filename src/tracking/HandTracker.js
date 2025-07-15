@@ -419,66 +419,59 @@ class HandTracker {
   recognizeGestures(landmarks, handedness) {
     const gestures = [];
     
-    // Pointing gesture
-    const pointingGesture = this.detectPointing(landmarks);
-    if (pointingGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'pointing',
-        confidence: pointingGesture.confidence,
-        hand: handedness,
-        direction: pointingGesture.direction
-      });
+    // Basic gestures (always active)
+    const basicGestures = [
+      { detect: this.detectPointing, type: 'pointing', props: ['direction'] },
+      { detect: this.detectPinching, type: 'pinching', props: ['strength'] },
+      { detect: this.detectThumbsUp, type: 'thumbsUp', props: [] },
+      { detect: this.detectPeaceSign, type: 'peaceSign', props: [] },
+      { detect: this.detectOpenPalm, type: 'openPalm', props: [] },
+      { detect: this.detectClosedFist, type: 'closedFist', props: [] }
+    ];
+    
+    // Process basic gestures
+    for (const gesture of basicGestures) {
+      const result = gesture.detect.call(this, landmarks);
+      if (result.confidence > this.gestureThreshold) {
+        const gestureData = {
+          type: gesture.type,
+          confidence: result.confidence,
+          hand: handedness
+        };
+        
+        // Add additional properties if they exist
+        for (const prop of gesture.props) {
+          if (result[prop] !== undefined) {
+            gestureData[prop] = result[prop];
+          }
+        }
+        
+        gestures.push(gestureData);
+      }
     }
     
-    // Pinching gesture
-    const pinchingGesture = this.detectPinching(landmarks);
-    if (pinchingGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'pinching',
-        confidence: pinchingGesture.confidence,
-        hand: handedness,
-        strength: pinchingGesture.strength
-      });
-    }
-    
-    // Thumbs up gesture
-    const thumbsUpGesture = this.detectThumbsUp(landmarks);
-    if (thumbsUpGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'thumbsUp',
-        confidence: thumbsUpGesture.confidence,
-        hand: handedness
-      });
-    }
-    
-    // Peace sign gesture
-    const peaceGesture = this.detectPeaceSign(landmarks);
-    if (peaceGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'peaceSign',
-        confidence: peaceGesture.confidence,
-        hand: handedness
-      });
-    }
-    
-    // Open palm gesture
-    const openPalmGesture = this.detectOpenPalm(landmarks);
-    if (openPalmGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'openPalm',
-        confidence: openPalmGesture.confidence,
-        hand: handedness
-      });
-    }
-    
-    // Closed fist gesture
-    const closedFistGesture = this.detectClosedFist(landmarks);
-    if (closedFistGesture.confidence > this.gestureThreshold) {
-      gestures.push({
-        type: 'closedFist',
-        confidence: closedFistGesture.confidence,
-        hand: handedness
-      });
+    // Advanced gestures (only in advanced mode)
+    if (this.gestureMode === 'advanced') {
+      // Number gestures
+      const numberGesture = this.detectNumberGesture(landmarks);
+      if (numberGesture.confidence > this.gestureThreshold) {
+        gestures.push({
+          type: 'number',
+          confidence: numberGesture.confidence,
+          hand: handedness,
+          number: numberGesture.number
+        });
+      }
+      
+      // Index + Middle combination
+      const indexMiddleGesture = this.detectIndexMiddleCombination(landmarks);
+      if (indexMiddleGesture.confidence > this.gestureThreshold) {
+        gestures.push({
+          type: 'indexMiddle',
+          confidence: indexMiddleGesture.confidence,
+          hand: handedness
+        });
+      }
     }
     
     return gestures;
@@ -570,6 +563,52 @@ class HandTracker {
     const pinkyFolded = !this.isFingerExtended(landmarks, 'pinky');
     
     const confidence = thumbFolded && indexFolded && middleFolded && ringFolded && pinkyFolded ? 0.9 : 0.0;
+    
+    return { confidence };
+  }
+
+  // Advanced gesture detection methods
+  detectNumberGesture(landmarks) {
+    // Count extended fingers
+    const fingers = [
+      this.isFingerExtended(landmarks, 'thumb'),
+      this.isFingerExtended(landmarks, 'index'),
+      this.isFingerExtended(landmarks, 'middle'),
+      this.isFingerExtended(landmarks, 'ring'),
+      this.isFingerExtended(landmarks, 'pinky')
+    ];
+    
+    const extendedCount = fingers.filter(f => f).length;
+    
+    // Only recognize numbers 1-5
+    if (extendedCount >= 1 && extendedCount <= 5) {
+      // Higher confidence for clear number patterns
+      let confidence = 0.7;
+      
+      // Special cases for higher confidence
+      if (extendedCount === 1 && fingers[1]) { // Index finger only
+        confidence = 0.9;
+      } else if (extendedCount === 2 && fingers[1] && fingers[2]) { // Index and middle
+        confidence = 0.9;
+      } else if (extendedCount === 5) { // All fingers
+        confidence = 0.9;
+      }
+      
+      return { confidence, number: extendedCount };
+    }
+    
+    return { confidence: 0.0, number: 0 };
+  }
+
+  detectIndexMiddleCombination(landmarks) {
+    // Index and middle fingers extended, others folded
+    const indexExtended = this.isFingerExtended(landmarks, 'index');
+    const middleExtended = this.isFingerExtended(landmarks, 'middle');
+    const thumbFolded = !this.isFingerExtended(landmarks, 'thumb');
+    const ringFolded = !this.isFingerExtended(landmarks, 'ring');
+    const pinkyFolded = !this.isFingerExtended(landmarks, 'pinky');
+    
+    const confidence = indexExtended && middleExtended && thumbFolded && ringFolded && pinkyFolded ? 0.8 : 0.0;
     
     return { confidence };
   }
@@ -783,6 +822,12 @@ class HandTracker {
     if (this.handOverlay) {
       this.handOverlay.style.display = this.showLandmarks ? 'block' : 'none';
     }
+  }
+
+  toggleGestureMode() {
+    this.gestureMode = this.gestureMode === 'basic' ? 'advanced' : 'basic';
+    console.log('Gesture mode changed to:', this.gestureMode);
+    this.emit('gestureModeChanged', this.gestureMode);
   }
 
   updateUI() {

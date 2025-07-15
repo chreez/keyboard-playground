@@ -33,6 +33,13 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
   - **Closed Fist**: All fingers folded
 - **Gesture Confidence**: 0-1 confidence score for each detected gesture
 - **Gesture Events**: Trigger events on gesture start, hold, and end
+- **Gesture Modes**:
+  - **Basic**: Core gestures only (pointing, pinching, thumbs up, peace sign, open palm, closed fist)
+  - **Advanced**: Additional complex gestures and multi-finger combinations
+    - Number gestures (1-5 fingers)
+    - Specific finger combinations (index+middle, ring+pinky, etc.)
+    - Enhanced sensitivity for subtle gestures
+    - Multi-hand gesture combinations
 - **Custom Gestures**: Extensible system for adding new gesture patterns
 
 ### Visual Feedback

@@ -59,6 +59,11 @@ const HandTrackingApp = () => {
         handTrackerRef.current.on('resize', (dimensions) => {
           console.log('Screen resized to:', dimensions);
         });
+
+        handTrackerRef.current.on('gestureModeChanged', (mode) => {
+          setGestureMode(mode);
+          console.log('Gesture mode changed to:', mode);
+        });
         
         try {
           await handTrackerRef.current.init({
@@ -66,7 +71,7 @@ const HandTrackingApp = () => {
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5,
             showLandmarks: showLandmarks,
-            gestureMode: gestureMode
+            gestureMode: 'basic' // Always start in basic mode
           });
           console.log('HandTracker initialized successfully');
         } catch (error) {
@@ -126,12 +131,11 @@ const HandTrackingApp = () => {
       }
       
       if (key === 'g' || key === 'G') {
-        const newMode = gestureMode === 'basic' ? 'advanced' : 'basic';
-        setGestureMode(newMode);
         if (handTrackerRef.current) {
-          handTrackerRef.current.gestureMode = newMode;
+          handTrackerRef.current.toggleGestureMode();
+          setGestureMode(handTrackerRef.current.gestureMode);
         }
-        console.log('Gesture mode changed to:', newMode);
+        console.log('Gesture mode toggled to:', handTrackerRef.current?.gestureMode);
         return;
       }
     };
@@ -146,7 +150,7 @@ const HandTrackingApp = () => {
         handTrackerRef.current.dispose();
       }
     };
-  }, [gestureMode]);
+  }, []);
 
   const handleClose = () => {
     window.close();
@@ -172,10 +176,9 @@ const HandTrackingApp = () => {
   };
 
   const handleToggleGestureMode = () => {
-    const newMode = gestureMode === 'basic' ? 'advanced' : 'basic';
-    setGestureMode(newMode);
     if (handTrackerRef.current) {
-      handTrackerRef.current.gestureMode = newMode;
+      handTrackerRef.current.toggleGestureMode();
+      setGestureMode(handTrackerRef.current.gestureMode);
     }
   };
 
