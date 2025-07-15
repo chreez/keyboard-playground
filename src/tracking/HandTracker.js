@@ -437,6 +437,12 @@ class HandTracker {
         this.currentGestures = [];
         this.emit('handsLost');
       }
+      
+      // Still need to update trail effects even when no hands detected (for fading)
+      if (this.trailEnabled && this.trailHistory.size > 0) {
+        this.updateTrailHistory(); // Clean up old trail points
+        this.updateUI(); // Redraw with fading trails
+      }
     }
   }
 
@@ -885,7 +891,7 @@ class HandTracker {
   updateTrailHistory() {
     const now = performance.now();
     
-    // Update trail for each hand
+    // Update trail for each currently detected hand
     for (const hand of this.currentHands) {
       const handId = hand.handedness; // Use handedness as ID
       const handCenter = this.getHandCenter(hand.landmarks);
@@ -937,7 +943,10 @@ class HandTracker {
       if (!activeHandIds.has(handId)) {
         // Keep fading trail for a short time even after hand disappears
         const trail = this.trailHistory.get(handId);
-        if (trail.length > 0) {
+        if (trail.length === 0) {
+          // If trail is empty, remove it immediately
+          this.trailHistory.delete(handId);
+        } else {
           const oldestTimestamp = trail[0].timestamp;
           if (now - oldestTimestamp > this.trailConfig.fadeDuration) {
             this.trailHistory.delete(handId);
@@ -958,6 +967,7 @@ class HandTracker {
     
     // Draw trail effects first (behind landmarks) - independent of landmark visibility
     if (this.trailEnabled) {
+      console.log('Drawing trail effects, trail history size:', this.trailHistory.size);
       this.drawTrailEffects(ctx);
     }
     
@@ -980,6 +990,8 @@ class HandTracker {
     // Draw trail for each hand
     for (const [handId, trail] of this.trailHistory) {
       if (trail.length < 2) continue; // Need at least 2 points for trail
+      
+      console.log(`Drawing trail for ${handId} hand with ${trail.length} points`);
       
       const handColor = handId === 'left' ? '#ff6b6b' : '#4ecdc4';
       const trailColor = this.trailConfig.color;
