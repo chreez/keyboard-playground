@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import AudioSystem from '../audio/AudioSystem.js';
 
 const App = () => {
   const canvasRef = useRef(null);
+  const audioSystemRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -10,6 +12,12 @@ const App = () => {
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    // Initialize audio system
+    if (!audioSystemRef.current) {
+      audioSystemRef.current = new AudioSystem();
+      audioSystemRef.current.initialize();
+    }
 
     const handleResize = () => {
       canvas.width = window.innerWidth;
@@ -20,7 +28,13 @@ const App = () => {
       const key = event.key.toUpperCase();
       if (key >= 'A' && key <= 'Z') {
         console.log(`Key pressed: ${key}`);
-        // TODO: Trigger emoji and sound for this key
+        
+        // Play themed sound
+        if (audioSystemRef.current) {
+          audioSystemRef.current.playThemeSound(key);
+        }
+        
+        // TODO: Trigger emoji animation
       }
     };
 
@@ -30,6 +44,11 @@ const App = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeyPress);
+      
+      // Cleanup audio system
+      if (audioSystemRef.current) {
+        audioSystemRef.current.dispose();
+      }
     };
   }, []);
 
