@@ -5,6 +5,7 @@ class AudioSystem {
     this.isInitialized = false;
     this.synthPools = new Map();
     this.poolSize = 4; // Multiple instances per synth type for polyphony
+    this.sustainedNotes = new Map(); // Track held keys for sustained notes
   }
 
   async initialize() {
@@ -69,6 +70,58 @@ class AudioSystem {
     } catch (error) {
       console.error(`Failed to play sound for key ${key}:`, error);
     }
+  }
+
+  startSustainedNote(key) {
+    if (!this.isInitialized) {
+      this.initialize();
+      return;
+    }
+
+    // Don't start if already sustained
+    if (this.sustainedNotes.has(key)) {
+      return;
+    }
+
+    const sounds = this.getThemeSounds(key);
+    if (sounds.length === 0) {
+      console.warn(`No sounds found for key: ${key}`);
+      return;
+    }
+    
+    const sound = sounds[0];
+    
+    try {
+      const sustainedNote = sound.startSustained();
+      if (sustainedNote) {
+        this.sustainedNotes.set(key, sustainedNote);
+      }
+    } catch (error) {
+      console.error(`Failed to start sustained sound for key ${key}:`, error);
+    }
+  }
+
+  stopSustainedNote(key) {
+    const sustainedNote = this.sustainedNotes.get(key);
+    if (sustainedNote) {
+      try {
+        sustainedNote.stop();
+        this.sustainedNotes.delete(key);
+      } catch (error) {
+        console.error(`Failed to stop sustained sound for key ${key}:`, error);
+      }
+    }
+  }
+
+  stopAllSustainedNotes() {
+    for (const [key, sustainedNote] of this.sustainedNotes) {
+      try {
+        sustainedNote.stop();
+      } catch (error) {
+        console.error(`Failed to stop sustained sound for key ${key}:`, error);
+      }
+    }
+    this.sustainedNotes.clear();
   }
 
   getThemeSounds(key) {
@@ -212,11 +265,62 @@ class AudioSystem {
           console.warn(`Error playing ${def.synth} sound:`, error);
           availableSynth.inUse = false; // Release on error
         }
+      },
+      startSustained: () => {
+        const pool = this.synthPools.get(def.synth);
+        if (!pool) {
+          console.warn(`Synth pool ${def.synth} not found`);
+          return null;
+        }
+
+        // Find an available synth from the pool
+        let availableSynth = pool.find(item => !item.inUse);
+        if (!availableSynth) {
+          // If all synths are busy, use the first one
+          availableSynth = pool[0];
+          // Force release any existing note
+          try {
+            if (availableSynth.synth.triggerRelease) {
+              availableSynth.synth.triggerRelease();
+            }
+          } catch (e) {
+            // Ignore release errors
+          }
+        }
+
+        const { synth } = availableSynth;
+        availableSynth.inUse = true;
+
+        try {
+          // Use scheduled timing to avoid conflicts
+          const now = Tone.now() + (Math.random() * 0.005); // 0-5ms random delay
+          
+          synth.triggerAttack(def.note, now);
+          
+          // Return an object with a stop method
+          return {
+            stop: () => {
+              try {
+                synth.triggerRelease();
+                availableSynth.inUse = false;
+              } catch (error) {
+                console.warn(`Error stopping sustained ${def.synth} sound:`, error);
+                availableSynth.inUse = false;
+              }
+            }
+          };
+          
+        } catch (error) {
+          console.warn(`Error starting sustained ${def.synth} sound:`, error);
+          availableSynth.inUse = false;
+          return null;
+        }
       }
     }));
   }
 
   dispose() {
+    this.stopAllSustainedNotes();
     this.synthPools.forEach(pool => {
       pool.forEach(item => item.synth.dispose());
     });

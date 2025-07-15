@@ -15,6 +15,7 @@ const App = () => {
   const beatAnalyzerRef = useRef(null);
   const moodDetectorRef = useRef(null);
   const backgroundVisualizerRef = useRef(null);
+  const heldKeysRef = useRef(new Set()); // Track held keys for sustained notes
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,7 +65,7 @@ const App = () => {
       backgroundCanvas.height = window.innerHeight;
     };
 
-    const handleKeyPress = (event) => {
+    const handleKeyDown = (event) => {
       const key = event.key;
       
       // Handle all printable characters (letters, numbers, symbols) but filter out modifiers
@@ -73,9 +74,22 @@ const App = () => {
       if (!isModifier && key.length === 1) {
         const mappedKey = key.toUpperCase();
         
-        // Play themed sound
+        // Prevent key repeat for sustained notes
+        if (heldKeysRef.current.has(mappedKey)) {
+          return;
+        }
+        
+        heldKeysRef.current.add(mappedKey);
+        
+        // Start sustained note for musical characters or play normal sound
         if (audioSystemRef.current) {
-          audioSystemRef.current.playThemeSound(mappedKey);
+          // For musical characters (letters and numbers), use sustained notes
+          if (/[A-Z0-9]/.test(mappedKey)) {
+            audioSystemRef.current.startSustainedNote(mappedKey);
+          } else {
+            // For symbols, use normal one-shot sounds
+            audioSystemRef.current.playThemeSound(mappedKey);
+          }
         }
         
         // Spawn emoji animation
@@ -100,12 +114,32 @@ const App = () => {
       }
     };
 
+    const handleKeyUp = (event) => {
+      const key = event.key;
+      
+      // Handle all printable characters (letters, numbers, symbols) but filter out modifiers
+      const isModifier = ['Control', 'Alt', 'Shift', 'Meta', 'Tab', 'Escape', 'Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(key);
+      
+      if (!isModifier && key.length === 1) {
+        const mappedKey = key.toUpperCase();
+        
+        heldKeysRef.current.delete(mappedKey);
+        
+        // Stop sustained note if it's a musical character
+        if (audioSystemRef.current && /[A-Z0-9]/.test(mappedKey)) {
+          audioSystemRef.current.stopSustainedNote(mappedKey);
+        }
+      }
+    };
+
     window.addEventListener('resize', handleResize);
-    window.addEventListener('keydown', handleKeyPress);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
       
       // Cleanup audio system
       if (audioSystemRef.current) {

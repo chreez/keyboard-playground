@@ -774,8 +774,8 @@ class EmojiAnimator {
         emoji: carEmoji,
         x: x,
         y: y,
-        vx: 200 + Math.random() * 100, // Fast horizontal movement
-        vy: -50 + Math.random() * 30,   // Slight upward movement
+        vx: -(200 + Math.random() * 100), // Fast leftward movement (negative)
+        vy: -50 + Math.random() * 30,     // Slight upward movement
         rotation: 0,
         rotationSpeed: 0,
         scale: 1.0,
@@ -822,7 +822,7 @@ class EmojiAnimator {
     // Spawn smoke particles
     animation.smokeSpawnTimer += deltaTime;
     if (animation.smokeSpawnTimer >= animation.smokeSpawnInterval) {
-      this.spawnSmokeParticle(car.x - 20, car.y + 10); // Behind the car
+      this.spawnSmokeParticle(car.x + 20, car.y + 10); // Behind the car (right side since car moves left)
       animation.smokeSpawnTimer = 0;
     }
     
@@ -835,7 +835,7 @@ class EmojiAnimator {
       emoji: '💨',
       x: x + (Math.random() - 0.5) * 20,
       y: y + (Math.random() - 0.5) * 10,
-      vx: -30 + Math.random() * 20, // Drift backward
+      vx: 30 + Math.random() * 20, // Drift rightward (opposite of car movement)
       vy: -20 + Math.random() * 40, // Slight upward drift
       rotation: 0,
       rotationSpeed: (Math.random() - 0.5) * 2,
