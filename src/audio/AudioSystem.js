@@ -50,30 +50,23 @@ class AudioSystem {
   }
 
   playThemeSound(key) {
-    console.log(`[AUDIO_SYSTEM] playThemeSound called for key: ${key}`);
-    
     if (!this.isInitialized) {
-      console.log(`[AUDIO_SYSTEM] Not initialized, attempting to initialize...`);
       this.initialize();
       return;
     }
 
     const sounds = this.getThemeSounds(key);
-    console.log(`[AUDIO_SYSTEM] Found ${sounds.length} sounds for key ${key}`);
-    
     if (sounds.length === 0) {
-      console.warn(`[AUDIO_SYSTEM] No sounds found for key: ${key}`);
+      console.warn(`No sounds found for key: ${key}`);
       return;
     }
     
     const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
-    console.log(`[AUDIO_SYSTEM] Selected random sound, attempting to play...`);
     
     try {
       randomSound.play();
-      console.log(`[AUDIO_SYSTEM] Sound played successfully for key: ${key}`);
     } catch (error) {
-      console.error(`[AUDIO_SYSTEM] Failed to play sound for key ${key}:`, error);
+      console.error(`Failed to play sound for key ${key}:`, error);
     }
   }
 
@@ -182,6 +175,158 @@ class AudioSystem {
       'Z': () => [
         { synth: 'synth', note: 'F4', duration: '4n' }, // Zebra whinny
         { synth: 'synth', note: 'C4', duration: '16n' } // Zap sound
+      ],
+      // Numbers 0-9
+      '0': () => [
+        { synth: 'synth', note: 'C3', duration: '2n' }, // Zero drone
+        { synth: 'membrane', note: 'A1', duration: '4n' } // Empty thump
+      ],
+      '1': () => [
+        { synth: 'pluck', note: 'C5', duration: '16n' }, // Single ping
+        { synth: 'synth', note: 'G4', duration: '8n' } // One tone
+      ],
+      '2': () => [
+        { synth: 'pluck', note: 'C5', duration: '16n' }, // Two pings
+        { synth: 'pluck', note: 'E5', duration: '16n' }
+      ],
+      '3': () => [
+        { synth: 'pluck', note: 'C5', duration: '16n' }, // Three pings
+        { synth: 'pluck', note: 'E5', duration: '16n' },
+        { synth: 'pluck', note: 'G5', duration: '16n' }
+      ],
+      '4': () => [
+        { synth: 'membrane', note: 'F2', duration: '8n' }, // Four beats
+        { synth: 'synth', note: 'A4', duration: '16n' }
+      ],
+      '5': () => [
+        { synth: 'synth', note: 'D4', duration: '8n' }, // Five harmony
+        { synth: 'pluck', note: 'F#4', duration: '8n' }
+      ],
+      '6': () => [
+        { synth: 'membrane', note: 'G2', duration: '8n' }, // Six rhythm
+        { synth: 'synth', note: 'B4', duration: '16n' }
+      ],
+      '7': () => [
+        { synth: 'synth', note: 'C5', duration: '8n' }, // Lucky seven
+        { synth: 'pluck', note: 'G5', duration: '16n' }
+      ],
+      '8': () => [
+        { synth: 'membrane', note: 'D2', duration: '8n' }, // Infinity loop
+        { synth: 'synth', note: 'F4', duration: '4n' }
+      ],
+      '9': () => [
+        { synth: 'synth', note: 'A4', duration: '8n' }, // Nine lives
+        { synth: 'pluck', note: 'C5', duration: '16n' }
+      ],
+      // Common symbols
+      ' ': () => [
+        { synth: 'synth', note: 'C2', duration: '16n' } // Space whoosh
+      ],
+      '.': () => [
+        { synth: 'pluck', note: 'C6', duration: '32n' } // Dot click
+      ],
+      ',': () => [
+        { synth: 'pluck', note: 'G5', duration: '32n' } // Comma pause
+      ],
+      '!': () => [
+        { synth: 'synth', note: 'C5', duration: '8n' }, // Exclamation
+        { synth: 'membrane', note: 'C3', duration: '16n' }
+      ],
+      '?': () => [
+        { synth: 'synth', note: 'G4', duration: '8n' }, // Question rise
+        { synth: 'synth', note: 'C5', duration: '16n' }
+      ],
+      ';': () => [
+        { synth: 'pluck', note: 'F4', duration: '16n' }, // Semicolon
+        { synth: 'pluck', note: 'C4', duration: '32n' }
+      ],
+      ':': () => [
+        { synth: 'pluck', note: 'F4', duration: '16n' }, // Colon
+        { synth: 'pluck', note: 'F4', duration: '16n' }
+      ],
+      "'": () => [
+        { synth: 'pluck', note: 'A5', duration: '32n' } // Apostrophe tick
+      ],
+      '"': () => [
+        { synth: 'pluck', note: 'A5', duration: '32n' }, // Quote marks
+        { synth: 'pluck', note: 'A5', duration: '32n' }
+      ],
+      '-': () => [
+        { synth: 'synth', note: 'F3', duration: '8n' } // Dash/hyphen
+      ],
+      '=': () => [
+        { synth: 'synth', note: 'C4', duration: '16n' }, // Equals
+        { synth: 'synth', note: 'C4', duration: '16n' }
+      ],
+      '+': () => [
+        { synth: 'synth', note: 'C4', duration: '16n' }, // Plus/add
+        { synth: 'synth', note: 'G4', duration: '16n' }
+      ],
+      '*': () => [
+        { synth: 'pluck', note: 'C5', duration: '16n' }, // Star/multiply
+        { synth: 'synth', note: 'G4', duration: '8n' }
+      ],
+      '/': () => [
+        { synth: 'synth', note: 'A4', duration: '16n' } // Slash/divide
+      ],
+      '\\': () => [
+        { synth: 'synth', note: 'F4', duration: '16n' } // Backslash
+      ],
+      '(': () => [
+        { synth: 'synth', note: 'C4', duration: '16n' } // Open paren
+      ],
+      ')': () => [
+        { synth: 'synth', note: 'G4', duration: '16n' } // Close paren
+      ],
+      '[': () => [
+        { synth: 'membrane', note: 'C3', duration: '16n' } // Open bracket
+      ],
+      ']': () => [
+        { synth: 'membrane', note: 'G3', duration: '16n' } // Close bracket
+      ],
+      '{': () => [
+        { synth: 'membrane', note: 'F2', duration: '16n' } // Open brace
+      ],
+      '}': () => [
+        { synth: 'membrane', note: 'C3', duration: '16n' } // Close brace
+      ],
+      '<': () => [
+        { synth: 'synth', note: 'A3', duration: '16n' } // Less than
+      ],
+      '>': () => [
+        { synth: 'synth', note: 'E4', duration: '16n' } // Greater than
+      ],
+      '@': () => [
+        { synth: 'synth', note: 'D4', duration: '4n' }, // At symbol
+        { synth: 'pluck', note: 'A4', duration: '8n' }
+      ],
+      '#': () => [
+        { synth: 'membrane', note: 'F2', duration: '8n' }, // Hash/sharp
+        { synth: 'synth', note: 'F4', duration: '16n' }
+      ],
+      '$': () => [
+        { synth: 'synth', note: 'G4', duration: '8n' }, // Dollar sign
+        { synth: 'pluck', note: 'C5', duration: '16n' }
+      ],
+      '%': () => [
+        { synth: 'synth', note: 'F4', duration: '16n' }, // Percent
+        { synth: 'synth', note: 'C5', duration: '16n' }
+      ],
+      '^': () => [
+        { synth: 'synth', note: 'C5', duration: '8n' } // Caret/hat
+      ],
+      '&': () => [
+        { synth: 'membrane', note: 'G2', duration: '8n' }, // Ampersand
+        { synth: 'synth', note: 'D4', duration: '16n' }
+      ],
+      '|': () => [
+        { synth: 'synth', note: 'C4', duration: '4n' } // Pipe
+      ],
+      '~': () => [
+        { synth: 'synth', note: 'A4', duration: '2n' } // Tilde wave
+      ],
+      '`': () => [
+        { synth: 'pluck', note: 'F5', duration: '32n' } // Backtick
       ]
     };
 
@@ -198,33 +343,38 @@ class AudioSystem {
         }
 
         // Find an available synth from the pool
-        const availableSynth = pool.find(item => !item.inUse);
+        let availableSynth = pool.find(item => !item.inUse);
         if (!availableSynth) {
-          console.warn(`[SYNTH] All ${def.synth} synths in use, using first one`);
-          // Fallback to first synth if all are busy
+          // If all synths are busy, find the one that's been in use the longest
+          // This prevents blocking on rapid same-key presses
           availableSynth = pool[0];
+          // Force release any existing note to make it available immediately
+          try {
+            if (availableSynth.synth.triggerRelease) {
+              availableSynth.synth.triggerRelease();
+            }
+          } catch (e) {
+            // Ignore release errors
+          }
         }
 
         const { synth } = availableSynth;
         availableSynth.inUse = true;
 
         try {
-          console.log(`[SYNTH] Playing ${def.synth} synth with note ${def.note} for ${def.duration}`);
-          
-          // Use scheduled timing to avoid conflicts
-          const now = Tone.now();
+          // Use scheduled timing to avoid conflicts with small random offset
+          const now = Tone.now() + (Math.random() * 0.005); // 0-5ms random delay
           const duration = Tone.Time(def.duration).toSeconds();
           
           synth.triggerAttackRelease(def.note, def.duration, now);
-          console.log(`[SYNTH] triggerAttackRelease scheduled at ${now}`);
           
           // Mark synth as available after the note duration plus small buffer
           setTimeout(() => {
             availableSynth.inUse = false;
-          }, (duration + 0.1) * 1000); // Add 100ms buffer
+          }, (duration + 0.05) * 1000); // Reduced buffer for faster reuse
           
         } catch (error) {
-          console.warn(`[SYNTH] Error playing ${def.synth} sound:`, error);
+          console.warn(`Error playing ${def.synth} sound:`, error);
           availableSynth.inUse = false; // Release on error
         }
       }

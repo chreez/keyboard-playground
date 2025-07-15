@@ -88,9 +88,9 @@ Each alphabet key (A-Z) is assigned:
 ### Security Requirements
 - **Content Security Policy**: Must include CSP meta tag to eliminate Electron security warnings
   ```html
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; worker-src blob:; connect-src blob: 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; worker-src blob:; connect-src blob: 'self';">
   ```
-- **CSP Worker Constraints**: Tone.js requires blob workers for audio processing - must allow `worker-src blob:` and `connect-src blob:`
+- **CSP Worker Constraints**: Tone.js requires blob workers for audio processing - must allow `worker-src blob:`, `connect-src blob:`, and `script-src-elem blob:`
 - **Audio Worker Compatibility**: Modern Tone.js versions create blob workers that will fail without proper CSP permissions
 
 ### Audio System Constraints

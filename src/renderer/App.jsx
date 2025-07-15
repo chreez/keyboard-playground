@@ -33,29 +33,23 @@ const App = () => {
     };
 
     const handleKeyPress = (event) => {
-      const key = event.key.toUpperCase();
+      const key = event.key;
       
-      // Only handle single letter keys (A-Z), filter out modifiers and special keys
-      if (key.length === 1 && key >= 'A' && key <= 'Z') {
-        console.log(`[KEY] ${key} pressed - triggering audio and animation`);
+      // Handle all printable characters (letters, numbers, symbols) but filter out modifiers
+      const isModifier = ['Control', 'Alt', 'Shift', 'Meta', 'Tab', 'Escape', 'Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(key);
+      
+      if (!isModifier && key.length === 1) {
+        const mappedKey = key.toUpperCase();
         
         // Play themed sound
         if (audioSystemRef.current) {
-          console.log(`[AUDIO] Attempting to play sound for key: ${key}`);
-          audioSystemRef.current.playThemeSound(key);
-        } else {
-          console.warn(`[AUDIO] Audio system not initialized for key: ${key}`);
+          audioSystemRef.current.playThemeSound(mappedKey);
         }
         
         // Spawn emoji animation
         if (animatorRef.current) {
-          console.log(`[ANIMATION] Spawning emoji for key: ${key}`);
-          animatorRef.current.spawnEmoji(key);
-        } else {
-          console.warn(`[ANIMATION] Animator not initialized for key: ${key}`);
+          animatorRef.current.spawnEmoji(mappedKey);
         }
-      } else {
-        console.log(`[KEY] Ignored key: "${event.key}" (length: ${event.key.length})`);
       }
     };
 

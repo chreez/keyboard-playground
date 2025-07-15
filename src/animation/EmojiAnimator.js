@@ -76,7 +76,51 @@ class EmojiAnimator {
       'W': ['🐺', '🌊', '🍉'],
       'X': ['🦎', '❌', '💀'],
       'Y': ['🦘', '🧶', '⚡'],
-      'Z': ['🦓', '⚡', '〰️']
+      'Z': ['🦓', '⚡', '〰️'],
+      // Numbers 0-9
+      '0': ['🥯', '⭕', '🔮'], // Zero, circle, crystal ball
+      '1': ['🥇', '👆', '🕐'], // First place, one finger, one o'clock
+      '2': ['✌️', '👥', '🕑'], // Peace sign, two people, two o'clock
+      '3': ['🥉', '👌', '🕒'], // Third place, OK sign, three o'clock
+      '4': ['🍀', '🧩', '🕓'], // Four-leaf clover, puzzle, four o'clock
+      '5': ['🖐️', '⭐', '🕔'], // Hand, star, five o'clock
+      '6': ['🎲', '🏠', '🕕'], // Dice, house, six o'clock
+      '7': ['🎰', '🌈', '🕖'], // Lucky seven, rainbow, seven o'clock
+      '8': ['🎱', '♾️', '🕗'], // Eight ball, infinity, eight o'clock
+      '9': ['🐱', '☁️', '🕘'], // Nine lives, cloud nine, nine o'clock
+      // Common symbols
+      ' ': ['💨', '🌌', '👻'], // Wind, space, ghost
+      '.': ['⚫', '🔴', '🟠'], // Dots and circles
+      ',': ['📝', '⏸️', '🍃'], // Writing, pause, leaf
+      '!': ['❗', '⚠️', '💥'], // Exclamation marks
+      '?': ['❓', '🤔', '🔍'], // Question marks
+      ';': ['😉', '👁️', '🔗'], // Wink, eye, link
+      ':': ['😊', '👀', '⚖️'], // Colon faces
+      "'": ['✨', '💬', '📜'], // Sparkle, speech, scroll
+      '"': ['💭', '📖', '🗣️'], // Thought bubble, book, speaking
+      '-': ['➖', '✂️', '🔗'], // Minus, scissors, link
+      '=': ['⚖️', '🟰', '⚗️'], // Balance, equals, chemistry
+      '+': ['➕', '🩹', '⚕️'], // Plus, bandage, medical
+      '*': ['⭐', '✨', '🌟'], // Stars
+      '/': ['➗', '🔪', '⚡'], // Division, knife, lightning
+      '\\': ['↖️', '🪃', '📐'], // Arrow, boomerang, ruler
+      '(': ['🤗', '🫂', '👐'], // Hug, embrace, open hands
+      ')': ['😊', '🙌', '👏'], // Smile, celebration, clap
+      '[': ['📦', '🗃️', '📚'], // Box, filing cabinet, books
+      ']': ['✅', '🎯', '🏁'], // Check, target, finish
+      '{': ['🌸', '💮', '🏵️'], // Flowers, decorative
+      '}': ['🎉', '🎊', '✨'], // Celebration, confetti, sparkles
+      '<': ['⬅️', '◀️', '👈'], // Left arrows
+      '>': ['➡️', '▶️', '👉'], // Right arrows
+      '@': ['📧', '🌐', '📍'], // Email, web, location
+      '#': ['🏷️', '🎵', '#️⃣'], // Tag, music, number
+      '$': ['💰', '💴', '💵'], // Money
+      '%': ['📊', '🔋', '💯'], // Percentage, battery, hundred
+      '^': ['⬆️', '🔺', '🏔️'], // Up arrow, triangle, mountain
+      '&': ['🤝', '🔗', '➕'], // Handshake, link, and
+      '|': ['📏', '🔌', '⚡'], // Ruler, plug, pipe
+      '~': ['🌊', '〰️', '🐍'], // Wave, wavy line, snake
+      '`': ['💭', '✒️', '📝'] // Backtick, pen, writing
     };
 
     return emojiMap[key] || ['❓'];
