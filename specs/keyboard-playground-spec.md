@@ -37,9 +37,10 @@ Each printable character is assigned themed audio-visual feedback:
 
 ### Animation Behavior
 - **Spawn**: Emojis appear at randomized locations with targeting system
-- **Motion**: Float upward with slight physics (wobble, rotation)
-- **Lifetime**: Fade out after reaching top or after 5 seconds
+- **Motion**: Character-specific animation types (bounce, spiral, pulse, wiggle, burst, drift, swing, typewriter, hop, float)
+- **Lifetime**: Fade out after reaching top or after 6 seconds
 - **Concurrency**: Support 20+ simultaneous emojis without performance loss
+- **Animation Types**: See detailed specification in `specs/animation-types-spec.md`
 
 ### Targeting System (Integration Point)
 - **Spawn Patterns**: Randomized locations across screen with padding constraints
@@ -220,3 +221,4 @@ The project now consists of three separate applications to maintain separation o
 - v1.3 - Theme system architecture with deterministic Theme 1 implementation
 - v1.4 - Multi-application architecture with eye tracking integration
 - v1.5 - Added Theme 2 (Xylophone/Piano) specification with musical scale mapping
+- v1.6 - Enhanced animation system with 10 unique animation types and character-specific mapping
