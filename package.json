@@ -1,0 +1,26 @@
+{
+  "name": "keyboard-playground",
+  "version": "1.0.0",
+  "description": "An experimental Electron application that creates joyful audio-visual feedback through keyboard interaction",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "npm run build:renderer",
+    "build:renderer": "parcel build src/renderer/index.html --dist-dir dist/renderer",
+    "dev:renderer": "parcel src/renderer/index.html --dist-dir dist/renderer --port 3000"
+  },
+  "keywords": ["electron", "keyboard", "audio", "visual", "playground"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "parcel": "^2.9.0",
+    "@parcel/transformer-react-refresh-wrap": "^2.9.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tone": "^14.7.77"
+  }
+}
