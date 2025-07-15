@@ -967,7 +967,6 @@ class HandTracker {
     
     // Draw trail effects first (behind landmarks) - independent of landmark visibility
     if (this.trailEnabled) {
-      console.log('Drawing trail effects, trail history size:', this.trailHistory.size);
       this.drawTrailEffects(ctx);
     }
     
@@ -990,8 +989,6 @@ class HandTracker {
     // Draw trail for each hand
     for (const [handId, trail] of this.trailHistory) {
       if (trail.length < 2) continue; // Need at least 2 points for trail
-      
-      console.log(`Drawing trail for ${handId} hand with ${trail.length} points`);
       
       const handColor = handId === 'left' ? '#ff6b6b' : '#4ecdc4';
       const trailColor = this.trailConfig.color;

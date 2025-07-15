@@ -275,6 +275,8 @@ const HandTrackingApp = () => {
               <li><kbd>H</kbd> - Toggle help</li>
               <li><kbd>G</kbd> - Toggle gesture mode</li>
               <li><kbd>T</kbd> - Toggle trail effect</li>
+              <li><kbd>Cmd+Q</kbd> / <kbd>Ctrl+Q</kbd> - Quit app</li>
+              <li><kbd>Cmd+W</kbd> / <kbd>Ctrl+W</kbd> - Close window</li>
             </ul>
             <p><strong>Note:</strong> Tracking starts automatically when initialized</p>
             <p><strong>Gestures:</strong></p>

@@ -6,8 +6,8 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    fullscreen: true,
+    frame: false, // Remove window frame and system controls
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -15,13 +15,40 @@ function createWindow() {
       allowRunningInsecureContent: true
     },
     icon: path.join(__dirname, 'assets/icon.png'),
-    title: 'Hand Tracking Test'
+    title: 'Hand Tracking Test',
+    show: false // Don't show until ready
+  });
+
+  // Show window when ready
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+
+  // Handle keyboard shortcuts for fullscreen app
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'Escape' && input.type === 'keyDown') {
+      // Don't exit fullscreen on ESC - let the app handle it
+      // The app uses ESC to toggle hand tracking
+      event.preventDefault();
+    }
+    
+    // Cmd+Q (Mac) or Ctrl+Q to quit
+    if (input.type === 'keyDown' && input.key === 'q' && (input.meta || input.control)) {
+      app.quit();
+    }
+    
+    // Cmd+W (Mac) or Ctrl+W to close window
+    if (input.type === 'keyDown' && input.key === 'w' && (input.meta || input.control)) {
+      mainWindow.close();
+    }
   });
 
   if (isDev) {
     // Development mode - load from parcel dev server
     mainWindow.loadURL('http://localhost:3003');
-    mainWindow.webContents.openDevTools();
+    // Don't open DevTools in fullscreen by default
+    // mainWindow.webContents.openDevTools();
   } else {
     // Production mode - load from built files
     mainWindow.loadFile(path.join(__dirname, '../dist/hand-tracking/index.html'));
