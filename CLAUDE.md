@@ -69,4 +69,26 @@ This is an experimental Electron application that creates joyful audio-visual fe
 
 ## Success Criteria
 
-The application should produce immediate delight - users should smile within the first 10 keypresses with zero learning curve required. All 26 keys must produce unique themed output with smooth performance during rapid keypresses and multi-minute sessions.
+The application should produce immediate delight - users should smile within the first 10 keypresses with zero learning curve required. All characters must produce unique themed output with smooth performance during rapid keypresses and multi-minute sessions.
+
+## Development Workflow
+
+### Design Decision Process
+When making significant changes to the codebase, follow this workflow:
+
+1. **Identify the Change**: Clearly define what needs to be modified
+2. **Update Specification**: Document the change in the relevant spec file first
+3. **Implement Changes**: Make the code changes with proper structure for future flexibility
+4. **Commit with Context**: Use descriptive commit messages explaining both the change and reasoning
+5. **Update Documentation**: Ensure CLAUDE.md reflects any workflow or architectural changes
+
+### Commit Best Practices
+- **Atomic Commits**: Each commit should represent one logical change
+- **Descriptive Messages**: Include both what changed and why
+- **Spec Updates**: Always update specs when making design decisions
+- **Future-Proofing**: Structure code to allow for future variations (e.g., array structure for themes)
+
+### Design Patterns Used
+- **Theme System**: Audio uses array structure with single-item arrays for Theme 1 (deterministic)
+- **Targeting System**: Emoji spawn system designed as integration point for future enhancements
+- **Graceful Degradation**: All systems work independently and fail gracefully

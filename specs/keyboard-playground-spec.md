@@ -52,7 +52,9 @@ Each printable character is assigned themed audio-visual feedback:
 - **Engine**: Tone.js for synthesis
 - **Latency**: < 50ms from keypress to sound
 - **Polyphony**: Multiple simultaneous sounds supported
-- **Variation**: Each theme has 2-3 sound variants
+- **Sound Selection**: Theme-based deterministic system
+- **Theme 1**: Single deterministic sound per character (current implementation)
+- **Future Themes**: Array structure allows for variations while maintaining deterministic behavior
 
 ## Technical Architecture
 

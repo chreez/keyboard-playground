@@ -61,10 +61,11 @@ class AudioSystem {
       return;
     }
     
-    const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+    // Theme 1: Always use first sound (deterministic)
+    const sound = sounds[0];
     
     try {
-      randomSound.play();
+      sound.play();
     } catch (error) {
       console.error(`Failed to play sound for key ${key}:`, error);
     }
@@ -72,212 +73,61 @@ class AudioSystem {
 
   getThemeSounds(key) {
     const themes = {
-      'A': () => [
-        { synth: 'pluck', note: 'C4', duration: '8n' }, // Ant steps
-        { synth: 'synth', note: 'G4', duration: '4n' } // Apple crunch
-      ],
-      'B': () => [
-        { synth: 'membrane', note: 'C2', duration: '4n' }, // Bear growl
-        { synth: 'pluck', note: 'C5', duration: '16n' } // Ball bounce
-      ],
-      'C': () => [
-        { synth: 'synth', note: 'E5', duration: '8n' }, // Cat meow
-        { synth: 'synth', note: 'C3', duration: '4n' } // Car vroom
-      ],
-      'D': () => [
-        { synth: 'membrane', note: 'G2', duration: '8n' }, // Dog woof
-        { synth: 'pluck', note: 'A5', duration: '16n' } // Toy squeak
-      ],
-      'E': () => [
-        { synth: 'synth', note: 'A4', duration: '2n' }, // Elephant trumpet
-        { synth: 'pluck', note: 'F4', duration: '8n' } // Egg crack
-      ],
-      'F': () => [
-        { synth: 'pluck', note: 'D5', duration: '8n' }, // Fish bubble
-        { synth: 'synth', note: 'B3', duration: '4n' } // Fire crackle
-      ],
-      'G': () => [
-        { synth: 'membrane', note: 'D3', duration: '4n' }, // Goat bleat
-        { synth: 'pluck', note: 'G5', duration: '16n' } // Guitar strum
-      ],
-      'H': () => [
-        { synth: 'synth', note: 'B4', duration: '4n' }, // Horse neigh
-        { synth: 'pluck', note: 'C4', duration: '8n' } // Harp pluck
-      ],
-      'I': () => [
-        { synth: 'pluck', note: 'E4', duration: '8n' }, // Insect buzz
-        { synth: 'synth', note: 'F5', duration: '16n' } // Ice clink
-      ],
-      'J': () => [
-        { synth: 'membrane', note: 'A2', duration: '4n' }, // Jaguar roar
-        { synth: 'pluck', note: 'D5', duration: '8n' } // Jump sound
-      ],
-      'K': () => [
-        { synth: 'synth', note: 'G4', duration: '8n' }, // Koala call
-        { synth: 'pluck', note: 'C5', duration: '16n' } // Key jingle
-      ],
-      'L': () => [
-        { synth: 'membrane', note: 'E2', duration: '2n' }, // Lion roar
-        { synth: 'pluck', note: 'A4', duration: '8n' } // Leaf rustle
-      ],
-      'M': () => [
-        { synth: 'synth', note: 'A3', duration: '4n' }, // Mouse squeak
-        { synth: 'membrane', note: 'C3', duration: '8n' } // Music note
-      ],
-      'N': () => [
-        { synth: 'pluck', note: 'F4', duration: '8n' }, // Newt chirp
-        { synth: 'synth', note: 'B4', duration: '16n' } // Note chime
-      ],
-      'O': () => [
-        { synth: 'synth', note: 'D4', duration: '4n' }, // Owl hoot
-        { synth: 'pluck', note: 'G4', duration: '8n' } // Orange squeeze
-      ],
-      'P': () => [
-        { synth: 'membrane', note: 'F2', duration: '8n' }, // Pig oink
-        { synth: 'pluck', note: 'E5', duration: '16n' } // Pop sound
-      ],
-      'Q': () => [
-        { synth: 'synth', note: 'C5', duration: '4n' }, // Quail call
-        { synth: 'pluck', note: 'F4', duration: '8n' } // Question ping
-      ],
-      'R': () => [
-        { synth: 'membrane', note: 'B2', duration: '4n' }, // Rabbit thump
-        { synth: 'synth', note: 'A3', duration: '8n' } // Rain patter
-      ],
-      'S': () => [
-        { synth: 'synth', note: 'D4', duration: '8n' }, // Snake hiss
-        { synth: 'synth', note: 'A5', duration: '16n' } // Star twinkle
-      ],
-      'T': () => [
-        { synth: 'membrane', note: 'G2', duration: '4n' }, // Tiger growl
-        { synth: 'pluck', note: 'C4', duration: '8n' } // Tree creak
-      ],
-      'U': () => [
-        { synth: 'synth', note: 'E4', duration: '4n' }, // Unicorn magic
-        { synth: 'pluck', note: 'D5', duration: '16n' } // Up sound
-      ],
-      'V': () => [
-        { synth: 'membrane', note: 'A2', duration: '8n' }, // Vulture screech
-        { synth: 'pluck', note: 'F5', duration: '16n' } // Violin string
-      ],
-      'W': () => [
-        { synth: 'synth', note: 'C4', duration: '2n' }, // Wolf howl
-        { synth: 'synth', note: 'B3', duration: '8n' } // Wind whoosh
-      ],
-      'X': () => [
-        { synth: 'pluck', note: 'G4', duration: '8n' }, // Xenops chirp
-        { synth: 'synth', note: 'E5', duration: '16n' } // X-ray beep
-      ],
-      'Y': () => [
-        { synth: 'membrane', note: 'D2', duration: '4n' }, // Yak grunt
-        { synth: 'pluck', note: 'A4', duration: '8n' } // Yoyo spin
-      ],
-      'Z': () => [
-        { synth: 'synth', note: 'F4', duration: '4n' }, // Zebra whinny
-        { synth: 'synth', note: 'C4', duration: '16n' } // Zap sound
-      ],
+      'A': () => [{ synth: 'pluck', note: 'C4', duration: '8n' }], // Ant steps
+      'B': () => [{ synth: 'membrane', note: 'C2', duration: '4n' }], // Bear growl
+      'C': () => [{ synth: 'synth', note: 'E5', duration: '8n' }], // Cat meow
+      'D': () => [{ synth: 'membrane', note: 'G2', duration: '8n' }], // Dog woof
+      'E': () => [{ synth: 'synth', note: 'A4', duration: '2n' }], // Elephant trumpet
+      'F': () => [{ synth: 'pluck', note: 'D5', duration: '8n' }], // Fish bubble
+      'G': () => [{ synth: 'membrane', note: 'D3', duration: '4n' }], // Goat bleat
+      'H': () => [{ synth: 'synth', note: 'B4', duration: '4n' }], // Horse neigh
+      'I': () => [{ synth: 'pluck', note: 'E4', duration: '8n' }], // Insect buzz
+      'J': () => [{ synth: 'membrane', note: 'A2', duration: '4n' }], // Jaguar roar
+      'K': () => [{ synth: 'synth', note: 'G4', duration: '8n' }], // Koala call
+      'L': () => [{ synth: 'membrane', note: 'E2', duration: '2n' }], // Lion roar
+      'M': () => [{ synth: 'synth', note: 'A3', duration: '4n' }], // Mouse squeak
+      'N': () => [{ synth: 'pluck', note: 'F4', duration: '8n' }], // Newt chirp
+      'O': () => [{ synth: 'synth', note: 'D4', duration: '4n' }], // Owl hoot
+      'P': () => [{ synth: 'membrane', note: 'F2', duration: '8n' }], // Pig oink
+      'Q': () => [{ synth: 'synth', note: 'C5', duration: '4n' }], // Quail call
+      'R': () => [{ synth: 'membrane', note: 'B2', duration: '4n' }], // Rabbit thump
+      'S': () => [{ synth: 'synth', note: 'D4', duration: '8n' }], // Snake hiss
+      'T': () => [{ synth: 'membrane', note: 'G2', duration: '4n' }], // Tiger growl
+      'U': () => [{ synth: 'synth', note: 'E4', duration: '4n' }], // Unicorn magic
+      'V': () => [{ synth: 'membrane', note: 'A2', duration: '8n' }], // Vulture screech
+      'W': () => [{ synth: 'synth', note: 'C4', duration: '2n' }], // Wolf howl
+      'X': () => [{ synth: 'pluck', note: 'G4', duration: '8n' }], // Xenops chirp
+      'Y': () => [{ synth: 'membrane', note: 'D2', duration: '4n' }], // Yak grunt
+      'Z': () => [{ synth: 'synth', note: 'F4', duration: '4n' }], // Zebra whinny
       // Numbers 0-9
-      '0': () => [
-        { synth: 'synth', note: 'C3', duration: '2n' }, // Zero drone
-        { synth: 'membrane', note: 'A1', duration: '4n' } // Empty thump
-      ],
-      '1': () => [
-        { synth: 'pluck', note: 'C5', duration: '16n' }, // Single ping
-        { synth: 'synth', note: 'G4', duration: '8n' } // One tone
-      ],
-      '2': () => [
-        { synth: 'pluck', note: 'C5', duration: '16n' }, // Two pings
-        { synth: 'pluck', note: 'E5', duration: '16n' }
-      ],
-      '3': () => [
-        { synth: 'pluck', note: 'C5', duration: '16n' }, // Three pings
-        { synth: 'pluck', note: 'E5', duration: '16n' },
-        { synth: 'pluck', note: 'G5', duration: '16n' }
-      ],
-      '4': () => [
-        { synth: 'membrane', note: 'F2', duration: '8n' }, // Four beats
-        { synth: 'synth', note: 'A4', duration: '16n' }
-      ],
-      '5': () => [
-        { synth: 'synth', note: 'D4', duration: '8n' }, // Five harmony
-        { synth: 'pluck', note: 'F#4', duration: '8n' }
-      ],
-      '6': () => [
-        { synth: 'membrane', note: 'G2', duration: '8n' }, // Six rhythm
-        { synth: 'synth', note: 'B4', duration: '16n' }
-      ],
-      '7': () => [
-        { synth: 'synth', note: 'C5', duration: '8n' }, // Lucky seven
-        { synth: 'pluck', note: 'G5', duration: '16n' }
-      ],
-      '8': () => [
-        { synth: 'membrane', note: 'D2', duration: '8n' }, // Infinity loop
-        { synth: 'synth', note: 'F4', duration: '4n' }
-      ],
-      '9': () => [
-        { synth: 'synth', note: 'A4', duration: '8n' }, // Nine lives
-        { synth: 'pluck', note: 'C5', duration: '16n' }
-      ],
+      '0': () => [{ synth: 'synth', note: 'C3', duration: '2n' }], // Zero drone
+      '1': () => [{ synth: 'pluck', note: 'C5', duration: '16n' }], // Single ping
+      '2': () => [{ synth: 'pluck', note: 'E5', duration: '16n' }], // Two tone
+      '3': () => [{ synth: 'pluck', note: 'G5', duration: '16n' }], // Three tone
+      '4': () => [{ synth: 'membrane', note: 'F2', duration: '8n' }], // Four beats
+      '5': () => [{ synth: 'synth', note: 'D4', duration: '8n' }], // Five harmony
+      '6': () => [{ synth: 'membrane', note: 'G2', duration: '8n' }], // Six rhythm
+      '7': () => [{ synth: 'synth', note: 'C5', duration: '8n' }], // Lucky seven
+      '8': () => [{ synth: 'membrane', note: 'D2', duration: '8n' }], // Infinity loop
+      '9': () => [{ synth: 'synth', note: 'A4', duration: '8n' }], // Nine lives
       // Common symbols
-      ' ': () => [
-        { synth: 'synth', note: 'C2', duration: '16n' } // Space whoosh
-      ],
-      '.': () => [
-        { synth: 'pluck', note: 'C6', duration: '32n' } // Dot click
-      ],
-      ',': () => [
-        { synth: 'pluck', note: 'G5', duration: '32n' } // Comma pause
-      ],
-      '!': () => [
-        { synth: 'synth', note: 'C5', duration: '8n' }, // Exclamation
-        { synth: 'membrane', note: 'C3', duration: '16n' }
-      ],
-      '?': () => [
-        { synth: 'synth', note: 'G4', duration: '8n' }, // Question rise
-        { synth: 'synth', note: 'C5', duration: '16n' }
-      ],
-      ';': () => [
-        { synth: 'pluck', note: 'F4', duration: '16n' }, // Semicolon
-        { synth: 'pluck', note: 'C4', duration: '32n' }
-      ],
-      ':': () => [
-        { synth: 'pluck', note: 'F4', duration: '16n' }, // Colon
-        { synth: 'pluck', note: 'F4', duration: '16n' }
-      ],
-      "'": () => [
-        { synth: 'pluck', note: 'A5', duration: '32n' } // Apostrophe tick
-      ],
-      '"': () => [
-        { synth: 'pluck', note: 'A5', duration: '32n' }, // Quote marks
-        { synth: 'pluck', note: 'A5', duration: '32n' }
-      ],
-      '-': () => [
-        { synth: 'synth', note: 'F3', duration: '8n' } // Dash/hyphen
-      ],
-      '=': () => [
-        { synth: 'synth', note: 'C4', duration: '16n' }, // Equals
-        { synth: 'synth', note: 'C4', duration: '16n' }
-      ],
-      '+': () => [
-        { synth: 'synth', note: 'C4', duration: '16n' }, // Plus/add
-        { synth: 'synth', note: 'G4', duration: '16n' }
-      ],
-      '*': () => [
-        { synth: 'pluck', note: 'C5', duration: '16n' }, // Star/multiply
-        { synth: 'synth', note: 'G4', duration: '8n' }
-      ],
-      '/': () => [
-        { synth: 'synth', note: 'A4', duration: '16n' } // Slash/divide
-      ],
-      '\\': () => [
-        { synth: 'synth', note: 'F4', duration: '16n' } // Backslash
-      ],
-      '(': () => [
-        { synth: 'synth', note: 'C4', duration: '16n' } // Open paren
-      ],
-      ')': () => [
-        { synth: 'synth', note: 'G4', duration: '16n' } // Close paren
-      ],
+      ' ': () => [{ synth: 'synth', note: 'C2', duration: '16n' }], // Space whoosh
+      '.': () => [{ synth: 'pluck', note: 'C6', duration: '32n' }], // Dot click
+      ',': () => [{ synth: 'pluck', note: 'G5', duration: '32n' }], // Comma pause
+      '!': () => [{ synth: 'synth', note: 'C5', duration: '8n' }], // Exclamation
+      '?': () => [{ synth: 'synth', note: 'G4', duration: '8n' }], // Question rise
+      ';': () => [{ synth: 'pluck', note: 'F4', duration: '16n' }], // Semicolon
+      ':': () => [{ synth: 'pluck', note: 'F4', duration: '16n' }], // Colon
+      "'": () => [{ synth: 'pluck', note: 'A5', duration: '32n' }], // Apostrophe tick
+      '"': () => [{ synth: 'pluck', note: 'A5', duration: '32n' }], // Quote marks
+      '-': () => [{ synth: 'synth', note: 'F3', duration: '8n' }], // Dash/hyphen
+      '=': () => [{ synth: 'synth', note: 'C4', duration: '16n' }], // Equals
+      '+': () => [{ synth: 'synth', note: 'C4', duration: '16n' }], // Plus/add
+      '*': () => [{ synth: 'pluck', note: 'C5', duration: '16n' }], // Star/multiply
+      '/': () => [{ synth: 'synth', note: 'A4', duration: '16n' }], // Slash/divide
+      '\\': () => [{ synth: 'synth', note: 'F4', duration: '16n' }], // Backslash
+      '(': () => [{ synth: 'synth', note: 'C4', duration: '16n' }], // Open paren
+      ')': () => [{ synth: 'synth', note: 'G4', duration: '16n' }], // Close paren
       '[': () => [
         { synth: 'membrane', note: 'C3', duration: '16n' } // Open bracket
       ],
