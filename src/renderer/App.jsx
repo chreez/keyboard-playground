@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import AudioSystem from '../audio/AudioSystem.js';
+import EmojiAnimator from '../animation/EmojiAnimator.js';
 
 const App = () => {
   const canvasRef = useRef(null);
   const audioSystemRef = useRef(null);
+  const animatorRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,6 +19,12 @@ const App = () => {
     if (!audioSystemRef.current) {
       audioSystemRef.current = new AudioSystem();
       audioSystemRef.current.initialize();
+    }
+
+    // Initialize emoji animator
+    if (!animatorRef.current) {
+      animatorRef.current = new EmojiAnimator(canvas);
+      animatorRef.current.start();
     }
 
     const handleResize = () => {
@@ -34,7 +42,10 @@ const App = () => {
           audioSystemRef.current.playThemeSound(key);
         }
         
-        // TODO: Trigger emoji animation
+        // Spawn emoji animation
+        if (animatorRef.current) {
+          animatorRef.current.spawnEmoji(key);
+        }
       }
     };
 
@@ -48,6 +59,11 @@ const App = () => {
       // Cleanup audio system
       if (audioSystemRef.current) {
         audioSystemRef.current.dispose();
+      }
+      
+      // Cleanup animator
+      if (animatorRef.current) {
+        animatorRef.current.dispose();
       }
     };
   }, []);
