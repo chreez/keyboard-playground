@@ -18,7 +18,12 @@
     "dev:integrated": "concurrently \"npm run dev:integrated:renderer\" \"npm run dev:integrated:electron\"",
     "dev:integrated:renderer": "parcel src/integrated/index.html --port 3002",
     "dev:integrated:electron": "wait-on http://localhost:3002 && electron src/main-integrated.js --dev",
-    "build:integrated": "parcel build src/integrated/index.html --dist-dir dist/integrated --public-url ./"
+    "build:integrated": "parcel build src/integrated/index.html --dist-dir dist/integrated --public-url ./",
+    "start:handtracking": "npm run build:handtracking && electron src/main-handtracking.js",
+    "dev:handtracking": "concurrently \"npm run dev:handtracking:renderer\" \"npm run dev:handtracking:electron\"",
+    "dev:handtracking:renderer": "parcel src/hand-tracking/index.html --port 3003",
+    "dev:handtracking:electron": "wait-on http://localhost:3003 && electron src/main-handtracking.js --dev",
+    "build:handtracking": "parcel build src/hand-tracking/index.html --dist-dir dist/hand-tracking --public-url ./"
   },
   "keywords": [
     "electron",

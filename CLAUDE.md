@@ -32,6 +32,7 @@ Instructions for Claude Code when working with this repository.
 npm run dev                # Keyboard Playground (port 3000)
 npm run dev:eyetracking    # Face Tracking POC (port 3001)
 npm run dev:integrated     # Integrated Experience (port 3002)
+npm run dev:handtracking   # Hand Tracking POC (port 3003)
 ```
 
 ### Required Testing
