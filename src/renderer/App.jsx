@@ -34,9 +34,9 @@ const App = () => {
 
     const handleKeyPress = (event) => {
       const key = event.key.toUpperCase();
-      if (key >= 'A' && key <= 'Z') {
-        console.log(`Key pressed: ${key}`);
-        
+      
+      // Only handle single letter keys (A-Z), filter out modifiers and special keys
+      if (key.length === 1 && key >= 'A' && key <= 'Z') {
         // Play themed sound
         if (audioSystemRef.current) {
           audioSystemRef.current.playThemeSound(key);
