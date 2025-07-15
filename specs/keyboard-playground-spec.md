@@ -83,5 +83,35 @@ Each alphabet key (A-Z) is assigned:
 - Record/playback sessions
 - Multi-key combos for special effects
 
+## Implementation Notes (v1.1)
+
+### Security Requirements
+- **Content Security Policy**: Must include CSP meta tag to eliminate Electron security warnings
+  ```html
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  ```
+
+### Audio System Constraints
+- **Reliable Synths**: Use stable Tone.js synthesizers (synth, pluck, membrane, metal) 
+- **Avoid Problematic Types**: Oscillator and NoiseSynth cause timing errors with rapid keypresses
+- **Error Handling**: Wrap all audio playback in try-catch blocks with graceful fallbacks
+- **Polyphony Safety**: Implement proper triggerAttackRelease vs triggerAttack/triggerRelease patterns
+
+### Input Filtering
+- **Key Validation**: Only process single-character keys (A-Z) using `key.length === 1` check
+- **Modifier Filtering**: Exclude META, CTRL, ALT, SHIFT and other modifier keys
+- **Case Handling**: Convert to uppercase for consistent theme mapping
+
+### Performance Optimizations  
+- **Emoji Limits**: Hard cap at 20 concurrent emojis with oldest-first removal
+- **Animation Cleanup**: Automatic removal when emojis exceed lifetime or go off-screen
+- **Memory Management**: Proper disposal of audio and animation systems on unmount
+
+### Development Workflow
+- **Build Tools**: Use Parcel with concurrently for parallel renderer/electron development
+- **Hot Reloading**: Separate dev scripts for renderer (port 3000) and electron processes
+- **Package Structure**: Remove conflicting "main" field to avoid Parcel library target errors
+
 ## Version History
 - v1.0 - Initial MVP specification
+- v1.1 - Implementation requirements and constraints based on development experience
