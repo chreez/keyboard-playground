@@ -20,11 +20,16 @@ This is an experimental Electron application that creates joyful audio-visual fe
 - **Eye Tracking**: WebGazer.js with ridge regression/neural network models
 
 ### Core Systems
-- **Key Mapping**: 26 alphabet keys mapped to themed emoji/sound sets (animals + related items)
+- **Key Mapping**: Comprehensive character support (A-Z, 0-9, symbols) with themed emoji/sound sets
+  - Letters: Animal themes (A=Ant, B=Bear, etc.)
+  - Numbers: Numeric themes (0=Zero/Circle, 1=One/First, etc.)  
+  - Symbols: Functional themes (!=Exclamation, @=Email, etc.)
 - **Animation Engine**: Physics-based emoji spawning with concurrent support for 20+ emojis
+- **Targeting System**: 10% screen padding with 70% center-bias distribution
+- **Audio System**: Theme-based deterministic sounds with synth pooling for rapid keypresses
 - **Dual Mode Operation**: 
-  - Mode 1: Traditional bottom-spawn (fallback)
-  - Mode 2: Gaze-controlled spawn points with eye tracking
+  - Mode 1: Traditional targeting system (current)
+  - Mode 2: Gaze-controlled spawn points with eye tracking (future)
 - **Graceful Degradation**: Full keyboard functionality maintained if eye tracking fails
 
 ## Performance Requirements
@@ -92,3 +97,23 @@ When making significant changes to the codebase, follow this workflow:
 - **Theme System**: Audio uses array structure with single-item arrays for Theme 1 (deterministic)
 - **Targeting System**: Emoji spawn system designed as integration point for future enhancements
 - **Graceful Degradation**: All systems work independently and fail gracefully
+
+### Implementation Guidelines
+
+#### Theme System Evolution
+- **Current State**: Theme 1 implements single deterministic sounds per character
+- **Future Flexibility**: Array structure maintained to support multiple sound variations
+- **Selection Logic**: Theme-specific selection methods (e.g., `sounds[0]` for Theme 1)
+- **Consistency**: All characters should follow same array structure pattern
+
+#### Code Structure Principles
+- **Extensibility**: Design systems as integration points for future features
+- **Maintainability**: Keep related functionality grouped in logical modules
+- **Performance**: Optimize for smooth 60fps animation and <50ms audio latency
+- **Modularity**: Each system (audio, animation, targeting) should be independently testable
+
+#### Testing and Validation
+- **User Experience**: Test with actual typing to ensure smooth rapid keypresses
+- **Performance**: Monitor for audio timing conflicts and animation frame drops
+- **Compatibility**: Verify works with different keyboard layouts (Dvorak, QWERTZ)
+- **Edge Cases**: Test sustained typing sessions and system resource usage

@@ -1,4 +1,4 @@
-# Keyboard Playground Specification v1.0
+# Keyboard Playground Specification v1.3
 
 ## Overview
 An experimental Electron application that creates joyful audio-visual feedback through keyboard interaction, designed for immediate delight and zero-friction play.
@@ -52,9 +52,21 @@ Each printable character is assigned themed audio-visual feedback:
 - **Engine**: Tone.js for synthesis
 - **Latency**: < 50ms from keypress to sound
 - **Polyphony**: Multiple simultaneous sounds supported
-- **Sound Selection**: Theme-based deterministic system
-- **Theme 1**: Single deterministic sound per character (current implementation)
-- **Future Themes**: Array structure allows for variations while maintaining deterministic behavior
+- **Sound Selection**: Theme-based deterministic system with extensible architecture
+
+#### Theme System Architecture
+- **Theme 1 (Current)**: Single deterministic sound per character
+  - Each character maps to single-item array containing one sound definition
+  - Provides consistent, predictable audio feedback for muscle memory
+  - Uses `playThemeSound()` method with `sounds[0]` selection
+- **Future Themes**: Array structure designed for variations
+  - Multi-item arrays enable sound variations within same character theme
+  - Maintains deterministic behavior through theme-specific selection logic
+  - Supports progressive complexity (Theme 2: random from set, Theme 3: context-aware, etc.)
+- **Implementation**: Function-based theme definitions return sound descriptor arrays
+  - Format: `{ synth: 'type', note: 'pitch', duration: 'length' }`
+  - Synth types: 'pluck', 'membrane', 'metal', 'synth'
+  - Supports complex themes with multiple layered sounds per keypress
 
 ## Technical Architecture
 
@@ -163,3 +175,4 @@ Each printable character is assigned themed audio-visual feedback:
 - v1.0 - Initial MVP specification (26 letter keys only)
 - v1.1 - Implementation requirements and constraints based on development experience
 - v1.2 - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
+- v1.3 - Theme system architecture with deterministic Theme 1 implementation

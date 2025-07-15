@@ -146,29 +146,14 @@ class AudioSystem {
       '>': () => [
         { synth: 'synth', note: 'E4', duration: '16n' } // Greater than
       ],
-      '@': () => [
-        { synth: 'synth', note: 'D4', duration: '4n' }, // At symbol
-        { synth: 'pluck', note: 'A4', duration: '8n' }
-      ],
-      '#': () => [
-        { synth: 'membrane', note: 'F2', duration: '8n' }, // Hash/sharp
-        { synth: 'synth', note: 'F4', duration: '16n' }
-      ],
-      '$': () => [
-        { synth: 'synth', note: 'G4', duration: '8n' }, // Dollar sign
-        { synth: 'pluck', note: 'C5', duration: '16n' }
-      ],
-      '%': () => [
-        { synth: 'synth', note: 'F4', duration: '16n' }, // Percent
-        { synth: 'synth', note: 'C5', duration: '16n' }
-      ],
+      '@': () => [{ synth: 'synth', note: 'D4', duration: '4n' }], // At symbol
+      '#': () => [{ synth: 'membrane', note: 'F2', duration: '8n' }], // Hash/sharp
+      '$': () => [{ synth: 'synth', note: 'G4', duration: '8n' }], // Dollar sign
+      '%': () => [{ synth: 'synth', note: 'F4', duration: '16n' }], // Percent
       '^': () => [
         { synth: 'synth', note: 'C5', duration: '8n' } // Caret/hat
       ],
-      '&': () => [
-        { synth: 'membrane', note: 'G2', duration: '8n' }, // Ampersand
-        { synth: 'synth', note: 'D4', duration: '16n' }
-      ],
+      '&': () => [{ synth: 'membrane', note: 'G2', duration: '8n' }], // Ampersand
       '|': () => [
         { synth: 'synth', note: 'C4', duration: '4n' } // Pipe
       ],
