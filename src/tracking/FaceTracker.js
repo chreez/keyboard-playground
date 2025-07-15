@@ -131,7 +131,7 @@ class FaceTracker {
           object-fit: cover;
           transform: scaleX(-1);
           z-index: -1;
-          display: none;
+          display: block;
         `;
         this.videoElement.srcObject = stream;
         this.videoElement.autoplay = true;
@@ -143,6 +143,14 @@ class FaceTracker {
         await new Promise((resolve) => {
           this.videoElement.addEventListener('loadedmetadata', resolve);
         });
+        
+        // Force video to play
+        try {
+          await this.videoElement.play();
+          console.log('Video started playing');
+        } catch (playError) {
+          console.warn('Video autoplay failed:', playError);
+        }
         
         console.log('Camera access granted and video ready');
       } catch (cameraError) {
@@ -690,6 +698,7 @@ class FaceTracker {
     if (this.showConfidence && this.confidenceIndicator) {
       this.confidenceIndicator.style.display = 'block';
     }
+    // Always show video as background
     if (this.videoElement) {
       this.videoElement.style.display = 'block';
     }
@@ -702,9 +711,10 @@ class FaceTracker {
     if (this.confidenceIndicator) {
       this.confidenceIndicator.style.display = 'none';
     }
-    if (this.videoElement) {
-      this.videoElement.style.display = 'none';
-    }
+    // Keep video visible as background even when UI is hidden
+    // if (this.videoElement) {
+    //   this.videoElement.style.display = 'none';
+    // }
   }
 
   updateAttentionZone(x, y, radius) {

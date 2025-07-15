@@ -19,6 +19,7 @@ A standalone module that provides real-time attention tracking using standard we
 - **Recalibration**: Accessible hotkey (Spacebar)
 
 ### Tracking Display
+- **Fullscreen Camera Background**: Live video feed as background instead of PiP
 - **Attention Zone**: Circular area showing user's focus region
 - **Confidence Indicator**: Visual feedback for tracking quality
   - Green: High confidence (face clearly visible, >80% landmarks)
@@ -131,13 +132,15 @@ FaceTracker.on('attentionUpdate', callback)
 
 ### Current Implementation
 - ✅ **Standalone Application**: Independent face tracking test app
-- ✅ **Mock Implementation**: Mouse simulation for development
-- ✅ **5-Point Calibration**: Simplified calibration system
+- ✅ **Real MediaPipe Integration**: 468-point facial landmark detection
+- ✅ **5-Point Calibration**: Simplified calibration system with persistence
+- ✅ **Fullscreen Camera Background**: Live video feed as backdrop
+- ✅ **Default Calibration**: Pre-configured values for development mode
 - ✅ **Visual Feedback**: Attention zone and confidence indicators
 - ✅ **Hotkey Controls**: All specified controls functional
 - ✅ **Event System**: Complete event-driven architecture
 - ✅ **Error Handling**: Comprehensive error recovery
-- ✅ **Performance**: 60fps update rate maintained
+- ✅ **Performance**: 30fps face detection with GPU acceleration
 
 ### Mock Face Tracking Features
 - **Mouse Simulation**: Uses cursor position as attention zone center
