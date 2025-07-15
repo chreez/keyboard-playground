@@ -489,9 +489,9 @@ class HandTracker {
     
     const confidence = indexExtended && middleFolded && ringFolded && pinkyFolded ? 0.9 : 0.0;
     
-    // Calculate pointing direction
+    // Calculate pointing direction (mirror x-axis for display)
     const direction = {
-      x: landmarks[this.LANDMARKS.INDEX_TIP].x - landmarks[this.LANDMARKS.INDEX_MCP].x,
+      x: -(landmarks[this.LANDMARKS.INDEX_TIP].x - landmarks[this.LANDMARKS.INDEX_MCP].x), // Mirror x direction
       y: landmarks[this.LANDMARKS.INDEX_TIP].y - landmarks[this.LANDMARKS.INDEX_MCP].y
     };
     
@@ -679,7 +679,7 @@ class HandTracker {
     const middleMcp = landmarks[this.LANDMARKS.MIDDLE_MCP];
     
     return {
-      x: (wrist.x + middleMcp.x) / 2 * window.innerWidth,
+      x: (1 - (wrist.x + middleMcp.x) / 2) * window.innerWidth, // Mirror x-coordinate
       y: (wrist.y + middleMcp.y) / 2 * window.innerHeight
     };
   }
@@ -710,11 +710,11 @@ class HandTracker {
     if (!hand || !hand.landmarks) return [];
     
     return [
-      { x: hand.landmarks[this.LANDMARKS.THUMB_TIP].x * window.innerWidth, y: hand.landmarks[this.LANDMARKS.THUMB_TIP].y * window.innerHeight },
-      { x: hand.landmarks[this.LANDMARKS.INDEX_TIP].x * window.innerWidth, y: hand.landmarks[this.LANDMARKS.INDEX_TIP].y * window.innerHeight },
-      { x: hand.landmarks[this.LANDMARKS.MIDDLE_TIP].x * window.innerWidth, y: hand.landmarks[this.LANDMARKS.MIDDLE_TIP].y * window.innerHeight },
-      { x: hand.landmarks[this.LANDMARKS.RING_TIP].x * window.innerWidth, y: hand.landmarks[this.LANDMARKS.RING_TIP].y * window.innerHeight },
-      { x: hand.landmarks[this.LANDMARKS.PINKY_TIP].x * window.innerWidth, y: hand.landmarks[this.LANDMARKS.PINKY_TIP].y * window.innerHeight }
+      { x: (1 - hand.landmarks[this.LANDMARKS.THUMB_TIP].x) * window.innerWidth, y: hand.landmarks[this.LANDMARKS.THUMB_TIP].y * window.innerHeight },
+      { x: (1 - hand.landmarks[this.LANDMARKS.INDEX_TIP].x) * window.innerWidth, y: hand.landmarks[this.LANDMARKS.INDEX_TIP].y * window.innerHeight },
+      { x: (1 - hand.landmarks[this.LANDMARKS.MIDDLE_TIP].x) * window.innerWidth, y: hand.landmarks[this.LANDMARKS.MIDDLE_TIP].y * window.innerHeight },
+      { x: (1 - hand.landmarks[this.LANDMARKS.RING_TIP].x) * window.innerWidth, y: hand.landmarks[this.LANDMARKS.RING_TIP].y * window.innerHeight },
+      { x: (1 - hand.landmarks[this.LANDMARKS.PINKY_TIP].x) * window.innerWidth, y: hand.landmarks[this.LANDMARKS.PINKY_TIP].y * window.innerHeight }
     ];
   }
 
@@ -801,7 +801,7 @@ class HandTracker {
     // Draw landmarks
     ctx.fillStyle = color;
     for (const landmark of landmarks) {
-      const x = landmark.x * window.innerWidth;
+      const x = (1 - landmark.x) * window.innerWidth; // Mirror x-coordinate
       const y = landmark.y * window.innerHeight;
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, 2 * Math.PI);
@@ -838,8 +838,8 @@ class HandTracker {
       const endPoint = landmarks[end];
       
       ctx.beginPath();
-      ctx.moveTo(startPoint.x * window.innerWidth, startPoint.y * window.innerHeight);
-      ctx.lineTo(endPoint.x * window.innerWidth, endPoint.y * window.innerHeight);
+      ctx.moveTo((1 - startPoint.x) * window.innerWidth, startPoint.y * window.innerHeight);
+      ctx.lineTo((1 - endPoint.x) * window.innerWidth, endPoint.y * window.innerHeight);
       ctx.stroke();
     }
   }
