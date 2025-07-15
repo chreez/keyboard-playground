@@ -1,4 +1,4 @@
-# Keyboard Playground Specification v1.3
+# Keyboard Playground Specification v1.7
 
 ## Overview
 An experimental Electron application that creates joyful audio-visual feedback through keyboard interaction, designed for immediate delight and zero-friction play.
@@ -14,32 +14,33 @@ An experimental Electron application that creates joyful audio-visual feedback t
 ### Application Structure
 - **Platform**: Electron (latest stable)
 - **Window**: Fullscreen, frameless with custom minimal UI
-- **Background**: Pure black (#000000)
+- **Background**: Pure black (#000000) with dynamic mood-based gradients
 - **Exit**: Custom minimal close button (✕) in top-right corner
+- **Theme Controls**: Piano/Guitar theme switching buttons in top-left corner
+- **Music Control**: Background music toggle button (🎵 Music) in top-left corner
 
 ### Key Mapping System
-Each printable character is assigned themed audio-visual feedback:
+Each printable character is assigned themed audio-visual feedback based on current theme:
 
-**Letters (A-Z)**: Animal + related items themes
-- **Example**: D = Dog Theme
-  - Emojis: [🐶, 🦴, 🎾]
-  - Sounds: Low "woof", high "yip", squeaky toy
+**Current Implementation**: QWERTY keyboard position-based musical mapping
+- **Left side keys** (A, S, Z, Q) = **Low octaves** (2-3)
+- **Right side keys** (L, P, M, 0) = **High octaves** (4-5)
+- **Numbers row** = **Highest octave** (5)
+- **Consistent chromatic scale** progression across keyboard layout
 
-**Numbers (0-9)**: Numeric and symbolic themes  
-- **Example**: 3 = Three Theme
-  - Emojis: [🥉, 👌, 🕒] 
-  - Sounds: Three-note sequence
-
-**Symbols**: Functional and expressive themes
-- **Example**: ! = Exclamation Theme
-  - Emojis: [❗, ⚠️, 💥]
-  - Sounds: Sharp accent + percussion
+**Theme-Specific Mapping**:
+- **Theme 2 (Piano)**: Realistic piano sounds with AMSynth and proper attack/decay
+- **Theme 3 (Guitar)**: Electric guitar simulation with distortion, chorus, delay, reverb
+- **Sustained Notes**: Hold any letter/number for sustained tones
+- **Symbols**: One-shot percussive sounds for punctuation feel
 
 ### Animation Behavior
 - **Spawn**: Emojis appear at randomized locations with targeting system
 - **Motion**: Character-specific animation types (bounce, spiral, pulse, wiggle, burst, drift, swing, typewriter, hop, float)
+- **Complex Animations**: Multi-emoji compositions (e.g., car with smoke trail)
 - **Lifetime**: Fade out after reaching top or after 6 seconds
 - **Concurrency**: Support 20+ simultaneous emojis without performance loss
+- **Performance Scaling**: Automatic quality degradation under load
 - **Animation Types**: See detailed specification in `specs/animation-types-spec.md`
 
 ### Targeting System (Integration Point)
@@ -52,32 +53,37 @@ Each printable character is assigned themed audio-visual feedback:
 ### Audio System
 - **Engine**: Tone.js for synthesis
 - **Latency**: < 50ms from keypress to sound
-- **Polyphony**: Multiple simultaneous sounds supported
+- **Polyphony**: Multiple simultaneous sounds supported with synth pooling
 - **Sound Selection**: Theme-based deterministic system with extensible architecture
 - **Background Music**: Ambient theme music with volume controls and theme synchronization
+- **Sustained Notes**: Support for holding keys with proper note release
+- **Effects Processing**: Theme-specific effects chains for realistic instrument simulation
 
 #### Theme System Architecture
-- **Theme 1 (Current)**: Single deterministic sound per character
-  - Each character maps to single-item array containing one sound definition
-  - Provides consistent, predictable audio feedback for muscle memory
-  - Uses `playThemeSound()` method with `sounds[0]` selection
-- **Theme 2 (Xylophone/Piano)**: Musical scale mapping with pleasant tones
-  - Characters arranged in chromatic scale progression for natural musical feel
-  - **Letters (A-Z)**: Map to 26 ascending chromatic notes starting from C3
-    - A=C3, B=C#3, C=D3, D=D#3, E=E3, F=F3, G=F#3, H=G3, I=G#3, J=A3, K=A#3, L=B3, M=C4, N=C#4, O=D4, P=D#4, Q=E4, R=F4, S=F#4, T=G4, U=G#4, V=A4, W=A#4, X=B4, Y=C5, Z=C#5
-  - **Numbers (0-9)**: Map to major pentatonic scale for harmonic consonance
-    - 0=C4, 1=D4, 2=E4, 3=G4, 4=A4, 5=C5, 6=D5, 7=E5, 8=G5, 9=A5
-  - **Symbols**: Map to percussive and bell-like tones for textural variety
-    - Common symbols use higher octave metallic tones (C6-C7 range)
-  - **Synth Type**: Bright, crystalline 'pluck' synth with moderate sustain
-  - **Musical Characteristics**: Playful yet pleasant, encourages melodic exploration
-- **Theme 3 (Guitar Synth)**: Electric guitar simulation with effects chain
-  - **Letters (A-Z)**: Lead guitar tones with distortion and chorus
-  - **Numbers (0-9)**: Rhythm guitar sounds with chunky midrange
-  - **Symbols**: Percussive guitar effects for accents
-  - **Effects Chain**: Distortion → Chorus → Delay → Reverb → Volume
+- **Theme 2 (Piano)**: Realistic piano simulation with keyboard position mapping
+  - **QWERTY Position Mapping**: Keys mapped by physical position on keyboard
+    - **Z Row (octave 2)**: Z=C2, X=C#2, C=D2, V=D#2, B=E2, N=F2, M=F#2
+    - **A Row (octave 3)**: A=C3, S=C#3, D=D3, F=D#3, G=E3, H=F3, J=F#3, K=G3, L=G#3
+    - **Q Row (octave 4)**: Q=C4, W=C#4, E=D4, R=D#4, T=E4, Y=F4, U=F#4, I=G4, O=G#4, P=A4
+    - **Numbers (octave 5)**: 1=C5, 2=C#5, 3=D5, 4=D#5, 5=E5, 6=F5, 7=F#5, 8=G5, 9=G#5, 0=A5
+  - **Synth Type**: AMSynth with realistic piano attack/decay characteristics
+  - **Effects Chain**: Reverb (2.0s decay) + Volume control (-4dB)
+  - **Musical Characteristics**: Authentic piano feel with proper sustain behavior
+  - **Sustained Notes**: Full support for holding keys with natural release
+- **Theme 3 (Guitar Synth)**: Electric guitar simulation with comprehensive effects processing
+  - **Letters (A-Z)**: Lead guitar tones optimized for solos and melodic lines
+    - MonoSynth with sawtooth oscillator, quick attack (0.02s), long release (1.5s)
+    - Filter envelope for expressive tonal shaping
+  - **Numbers (0-9)**: Rhythm guitar sounds with chunky midrange emphasis
+    - Shorter sustain (0.6), faster decay (0.2s) for percussive rhythm feel
+    - Lower filter frequency (1500Hz) for fuller sound
+  - **Symbols**: Percussive guitar effects for accents and punctuation
+    - Square wave oscillator, very quick attack (0.005s), short release (0.5s)
+    - High filter frequency (3000Hz) for cutting accent sounds
+  - **Effects Chain**: Distortion (0.4 drive) → Chorus (4Hz rate) → Delay (0.25s) → Reverb (2.0s) → Volume (-3dB)
   - **Synth Type**: MonoSynth with sawtooth waves for electric guitar authenticity
-  - **Musical Characteristics**: Rock/electric guitar feel from clean to heavy distortion
+  - **Musical Characteristics**: Full range from clean jazz to heavy rock distortion
+  - **Sustained Notes**: Authentic guitar sustain with natural feedback characteristics
 - **Future Themes**: Array structure designed for variations
   - Multi-item arrays enable sound variations within same character theme
   - Maintains deterministic behavior through theme-specific selection logic
@@ -106,11 +112,23 @@ Each printable character is assigned themed audio-visual feedback:
   - Heavy mood: Atmospheric distorted guitar drones
 
 **Technical Implementation**:
-- **Transport**: Tone.js Transport for synchronized playback
-- **Scheduling**: Pattern-based sequencing for looping
-- **Effects**: Separate effects chain for background music
-- **Mixing**: Proper level balancing to avoid masking keyboard sounds
+- **Transport**: Tone.js Transport for synchronized playback at 80 BPM
+- **Scheduling**: Pattern-based sequencing with seamless looping
+- **Effects**: Separate effects chain (Chorus → Delay → Reverb → Volume)
+- **Mixing**: Background music at -12dB to avoid masking keyboard sounds
 - **Performance**: Lightweight patterns that don't impact typing latency
+- **Crossfading**: 2-second smooth transitions between mood changes
+- **Pattern Management**: Automatic pattern switching based on mood detection
+
+#### Mood Detection & Background Integration
+- **Real-time Analysis**: Analyzes typing patterns for tempo, intensity, rhythm variance
+- **Mood Categories**: 
+  - **General**: calm, energetic, playful, intense, frantic
+  - **Guitar-specific**: guitar-clean, guitar-warm, guitar-driven, guitar-heavy
+- **Octave Integration**: Lower octaves trigger warmer colors, higher octaves trigger cooler colors
+- **Speed Sensitivity**: Faster typing increases background intensity
+- **Visual Feedback**: Background gradients and particle effects respond to mood
+- **Audio Feedback**: Background music patterns adapt to detected mood
 
 ## Technical Architecture
 
@@ -121,65 +139,106 @@ Each printable character is assigned themed audio-visual feedback:
 - **Platform**: Electron (frameless window)
 
 ### Performance Requirements
-- 60 FPS animation minimum
-- < 50ms audio latency
-- < 200MB RAM usage
-- Smooth with 20+ active emojis
+- **Animation**: 60 FPS minimum with automatic quality scaling
+- **Audio**: < 50ms latency from keypress to sound
+- **Memory**: < 200MB RAM usage for all systems
+- **Concurrency**: Smooth with 20+ active emojis
+- **Background Music**: No impact on keyboard sound latency
+- **Mood Detection**: Real-time analysis without performance degradation
+- **Theme Switching**: Instantaneous with proper cleanup
+
+## User Experience & Controls
+
+### Application Controls
+| Key/Action | Function |
+|------------|----------|
+| **A-Z, 0-9** | Trigger themed emoji animations and sounds |
+| **Hold A-Z, 0-9** | Sustained notes (piano/guitar themes) |
+| **Symbols** | One-shot percussive sounds and animations |
+| **Piano Button** | Switch to Theme 2 (realistic piano) |
+| **Guitar Button** | Switch to Theme 3 (electric guitar) |
+| **🎵 Music Button** | Toggle background music on/off |
+| **✕ Button** | Exit application |
+
+### Theme Characteristics
+- **Piano Theme**: Realistic piano with proper attack/decay, reverb, octave-based layout
+- **Guitar Theme**: Electric guitar with distortion, chorus, delay, mood-responsive effects
+- **Background Music**: Ambient loops that adapt to typing mood and theme
+- **Visual Feedback**: Background colors and particles respond to octave and mood
+- **Sustained Notes**: Natural instrument behavior when holding keys
 
 ## Success Criteria
 
 ### Functional Tests
 - [ ] All printable characters (A-Z, 0-9, symbols) produce unique themed output
-- [ ] Random selection works across emoji/sound sets
+- [ ] Theme switching works instantly without audio artifacts
+- [ ] Sustained notes respond properly to key press/release
+- [ ] Background music adapts to mood changes smoothly
 - [ ] Multiple rapid keypresses handled smoothly (including same-key repeats)
 - [ ] Dvorak and alternative keyboard layouts work correctly
-- [ ] Exit button closes application cleanly
+- [ ] All UI controls (theme switching, music toggle, exit) function properly
 
 ### Experience Tests
 - [ ] First-time users understand immediately
 - [ ] Users report feeling "delighted" or "amused"
 - [ ] Natural to try all keys without prompting
+- [ ] Theme switching feels intuitive and responsive
+- [ ] Background music enhances rather than distracts from typing
 - [ ] No performance degradation over 5 minutes
 
 ## Character Mapping Reference
 
-### Letters (A-Z)
-| Key | Theme | Emojis | Sound Types |
-|-----|-------|---------|-------------|
-| A | Ant/Apple | [🐜, 🍎, 🍏] | Tiny steps, crunch |
-| B | Bear/Ball | [🐻, ⚽, 🏀] | Growl, bounce |
-| C | Cat/Car | [🐱, 🚗, 🏎️] | Meow, vroom |
-| D | Dog/Toys | [🐶, 🦴, 🎾] | Woof, squeak |
-| ... | ... | ... | ... |
-| Z | Zebra/Zigzag | [🦓, ⚡, 〰️] | Whinny, zap |
+### Current Implementation: QWERTY Position-Based Musical Mapping
 
-### Numbers (0-9)
-| Key | Theme | Emojis | Sound Types |
-|-----|-------|---------|-------------|
-| 0 | Zero/Circle | [🥯, ⭕, 🔮] | Drone, empty thump |
-| 1 | One/First | [🥇, 👆, 🕐] | Single ping, tone |
-| 2 | Two/Pair | [✌️, 👥, 🕑] | Double ping |
-| 3 | Three/Trio | [🥉, 👌, 🕒] | Triple ping sequence |
-| ... | ... | ... | ... |
-| 9 | Nine/Lives | [🐱, ☁️, 🕘] | Nine harmony |
+### Keyboard Layout (Theme 2 - Piano)
+| Row | Keys | Notes | Octave |
+|-----|------|-------|--------|
+| **Numbers** | 1-0 | C5-A5 | 5 (highest) |
+| **Q Row** | Q-P | C4-A4 | 4 (high) |
+| **A Row** | A-L | C3-G#3 | 3 (medium) |
+| **Z Row** | Z-M | C2-F#2 | 2 (low) |
 
-### Common Symbols
-| Key | Theme | Emojis | Sound Types |
-|-----|-------|---------|-------------|
-| ! | Exclamation | [❗, ⚠️, 💥] | Sharp accent |
-| ? | Question | [❓, 🤔, 🔍] | Rising tone |
-| @ | At/Email | [📧, 🌐, 📍] | Digital chime |
-| # | Hash/Tag | [🏷️, 🎵, #️⃣] | Sharp percussion |
-| ... | ... | ... | ... |
+### Theme-Specific Sound Characteristics
+
+#### Theme 2 (Piano)
+- **Synth**: AMSynth with piano-like attack/decay
+- **Attack**: 0.005s (sharp piano hammer strike)
+- **Decay**: 0.3s (natural note decay)
+- **Sustain**: 0.2 (realistic piano sustain)
+- **Release**: 2.5s (natural tail-off)
+- **Effects**: Reverb (2.0s decay) + Volume (-4dB)
+
+#### Theme 3 (Guitar)
+- **Letters**: Lead guitar (sawtooth, attack 0.02s, release 1.5s)
+- **Numbers**: Rhythm guitar (faster decay 0.2s, sustain 0.6)
+- **Symbols**: Effects guitar (square wave, attack 0.005s, release 0.5s)
+- **Effects**: Distortion → Chorus → Delay → Reverb → Volume (-3dB)
+
+### Animation Mappings
+All characters use the comprehensive animation system with 10 unique types:
+- **Bounce**: Balls, playful animals (⚽, 🏀, 🐰)
+- **Spiral**: Magical elements (✨, 🌟, 🦄)
+- **Pulse**: Hearts, alerts (💖, ❗, ⚠️)
+- **Wiggle**: Living creatures (🐛, 🐍, 🐟)
+- **Burst**: Explosive elements (💥, 🚀, 🎉)
+- **Drift**: Light objects (💨, ☁️, 🎈)
+- **Swing**: Hanging objects (🔔, ⚖️, 🗝️)
+- **Typewriter**: Communication (📝, 💬, 📧)
+- **Hop**: Small creatures (🐜, 🦗, 🐸)
+- **Float**: Default animation for neutral objects
 
 ## Future Considerations
-- Volume control slider
-- Theme switching (silly → musical → nature)
-  - **Theme 2 Implementation**: Xylophone/Piano musical scale theme ready for development
-  - **Theme Selection**: UI control to switch between Theme 1 (animal sounds) and Theme 2 (musical)
-  - **Theme Persistence**: Remember user's theme preference across sessions
-- Record/playback sessions
-- Multi-key combos for special effects
+- **Volume Control**: Individual sliders for keyboard sounds vs background music
+- **Additional Themes**: 
+  - Theme 4: Orchestral instruments (strings, brass, woodwinds)
+  - Theme 5: Electronic/synthetic sounds
+  - Theme 6: Natural sounds (rain, wind, birds)
+- **Theme Persistence**: Remember user's theme and music preferences across sessions
+- **Recording System**: Record and playback typing sessions with full audio-visual reproduction
+- **Multi-key Combos**: Special effects for chord-like key combinations
+- **MIDI Export**: Export typed melodies as MIDI files
+- **Customization**: User-defined key mappings and sound assignments
+- **Performance Analytics**: Typing speed, rhythm, and musical analysis
 
 ## Implementation Notes (v1.1)
 
@@ -248,10 +307,18 @@ The project now consists of three separate applications to maintain separation o
 - **Graceful Degradation**: Falls back to keyboard mode if tracking fails
 
 ## Version History
-- v1.0 - Initial MVP specification (26 letter keys only)
-- v1.1 - Implementation requirements and constraints based on development experience
-- v1.2 - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
-- v1.3 - Theme system architecture with deterministic Theme 1 implementation
-- v1.4 - Multi-application architecture with eye tracking integration
-- v1.5 - Added Theme 2 (Xylophone/Piano) specification with musical scale mapping
-- v1.6 - Enhanced animation system with 10 unique animation types and character-specific mapping
+- **v1.0** - Initial MVP specification (26 letter keys only)
+- **v1.1** - Implementation requirements and constraints based on development experience
+- **v1.2** - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
+- **v1.3** - Theme system architecture with deterministic Theme 1 implementation
+- **v1.4** - Multi-application architecture with eye tracking integration
+- **v1.5** - Added Theme 2 (Xylophone/Piano) specification with musical scale mapping
+- **v1.6** - Enhanced animation system with 10 unique animation types and character-specific mapping
+- **v1.7** - **CURRENT VERSION** - Comprehensive theme system with realistic instruments and background music
+  - **Theme 2 (Piano)**: Realistic piano simulation with AMSynth and keyboard position mapping
+  - **Theme 3 (Guitar)**: Electric guitar with comprehensive effects chain and authentic sound
+  - **Background Music System**: Mood-responsive ambient loops with theme integration
+  - **Sustained Notes**: Full support for holding keys with proper instrument behavior
+  - **Mood Detection**: Real-time analysis of typing patterns with visual/audio feedback
+  - **UI Controls**: Theme switching buttons and background music toggle
+  - **Performance Optimization**: Automatic quality scaling and efficient resource management
