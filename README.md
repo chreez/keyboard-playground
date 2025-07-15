@@ -39,17 +39,17 @@ Each alphabet key triggers themed emoji and sound combinations:
 
 ## Development
 
-1. **Start development mode**
+1. **Start development mode** (recommended)
    ```bash
    npm run dev
    ```
-   This will start the Electron app with hot reloading enabled.
+   This will start the Electron app with hot reloading enabled and development tools.
 
-2. **Build for production**
+2. **Run production build**
    ```bash
-   npm run build
    npm start
    ```
+   This builds the app and runs it in production mode.
 
 ## Usage
 

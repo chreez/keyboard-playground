@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "An experimental Electron application that creates joyful audio-visual feedback through keyboard interaction",
   "scripts": {
-    "start": "electron .",
+    "start": "npm run build && electron src/main.js",
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:renderer": "parcel src/renderer/index.html --port 3000",
     "dev:electron": "wait-on http://localhost:3000 && electron src/main.js --dev",
     "build": "npm run build:renderer",
-    "build:renderer": "parcel build --dist-dir dist/renderer"
+    "build:renderer": "parcel build src/renderer/index.html --dist-dir dist/renderer"
   },
   "keywords": ["electron", "keyboard", "audio", "visual", "playground"],
   "author": "",
