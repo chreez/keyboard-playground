@@ -2,18 +2,31 @@ import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import AudioSystem from '../audio/AudioSystem.js';
 import EmojiAnimator from '../animation/EmojiAnimator.js';
+import BeatAnalyzer from '../analysis/BeatAnalyzer.js';
+import MoodDetector from '../analysis/MoodDetector.js';
+import BackgroundVisualizer from '../visualization/BackgroundVisualizer.js';
 
 const App = () => {
   const canvasRef = useRef(null);
+  const backgroundCanvasRef = useRef(null);
+  const containerRef = useRef(null);
   const audioSystemRef = useRef(null);
   const animatorRef = useRef(null);
+  const beatAnalyzerRef = useRef(null);
+  const moodDetectorRef = useRef(null);
+  const backgroundVisualizerRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const backgroundCanvas = backgroundCanvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !backgroundCanvas || !container) return;
 
+    // Setup canvas sizes
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    backgroundCanvas.width = window.innerWidth;
+    backgroundCanvas.height = window.innerHeight;
 
     // Initialize audio system
     if (!audioSystemRef.current) {
@@ -27,9 +40,28 @@ const App = () => {
       animatorRef.current.start();
     }
 
+    // Initialize beat analyzer
+    if (!beatAnalyzerRef.current) {
+      beatAnalyzerRef.current = new BeatAnalyzer();
+      beatAnalyzerRef.current.setTheme(1); // Default to Theme 1
+    }
+
+    // Initialize mood detector
+    if (!moodDetectorRef.current) {
+      moodDetectorRef.current = new MoodDetector();
+    }
+
+    // Initialize background visualizer
+    if (!backgroundVisualizerRef.current) {
+      backgroundVisualizerRef.current = new BackgroundVisualizer(backgroundCanvas, container);
+      backgroundVisualizerRef.current.start();
+    }
+
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      backgroundCanvas.width = window.innerWidth;
+      backgroundCanvas.height = window.innerHeight;
     };
 
     const handleKeyPress = (event) => {
@@ -50,6 +82,21 @@ const App = () => {
         if (animatorRef.current) {
           animatorRef.current.spawnEmoji(mappedKey);
         }
+        
+        // Record keypress for beat analysis
+        if (beatAnalyzerRef.current) {
+          // For Theme 2 (musical), we could extract the note from the audio system
+          // For now, just record the keypress
+          beatAnalyzerRef.current.recordKeyPress(mappedKey);
+        }
+        
+        // Update mood based on beat analysis
+        if (beatAnalyzerRef.current && moodDetectorRef.current && backgroundVisualizerRef.current) {
+          const beatAnalysis = beatAnalyzerRef.current.getCurrentAnalysis();
+          const trendAnalysis = beatAnalyzerRef.current.getTrendAnalysis();
+          const mood = moodDetectorRef.current.analyzeMood(beatAnalysis, trendAnalysis);
+          backgroundVisualizerRef.current.updateMood(mood, beatAnalysis);
+        }
       }
     };
 
@@ -69,6 +116,20 @@ const App = () => {
       if (animatorRef.current) {
         animatorRef.current.dispose();
       }
+      
+      // Cleanup background visualizer
+      if (backgroundVisualizerRef.current) {
+        backgroundVisualizerRef.current.dispose();
+      }
+      
+      // Cleanup analysis systems
+      if (beatAnalyzerRef.current) {
+        beatAnalyzerRef.current.reset();
+      }
+      
+      if (moodDetectorRef.current) {
+        moodDetectorRef.current.reset();
+      }
     };
   }, []);
 
@@ -77,12 +138,39 @@ const App = () => {
   };
 
   return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      backgroundColor: '#000000',
-      position: 'relative'
-    }}>
+    <div 
+      ref={containerRef}
+      style={{ 
+        width: '100vw', 
+        height: '100vh', 
+        backgroundColor: '#000000',
+        position: 'relative'
+      }}
+    >
+      {/* Background canvas for mood visualization */}
+      <canvas
+        ref={backgroundCanvasRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 1
+        }}
+      />
+
+      {/* Canvas for emoji animations */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 2
+        }}
+      />
+
       {/* Close button */}
       <button
         onClick={handleClose}
@@ -106,17 +194,6 @@ const App = () => {
       >
         ✕
       </button>
-
-      {/* Canvas for animations */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          pointerEvents: 'none'
-        }}
-      />
     </div>
   );
 };
