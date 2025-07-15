@@ -55,6 +55,10 @@ const HandTrackingApp = () => {
           setStatus(prev => ({ ...prev, error: fullMessage }));
           console.error('Camera Error:', message, troubleshootingTips);
         });
+
+        handTrackerRef.current.on('resize', (dimensions) => {
+          console.log('Screen resized to:', dimensions);
+        });
         
         try {
           await handTrackerRef.current.init({

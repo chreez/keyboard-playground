@@ -17,6 +17,10 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 - **Handedness Detection**: Identify left/right hand with confidence scores
 - **Real-time Updates**: 30+ FPS tracking with smooth motion
 - **Occlusion Handling**: Graceful degradation when hands overlap or partially exit frame
+- **Screen Resize Support**: Automatic readjustment when window/screen size changes
+  - Canvas dimensions update immediately on resize
+  - Landmark coordinates recalculate for new screen dimensions
+  - No interruption to hand tracking during resize events
 
 ### Gesture Recognition
 - **Core Gestures**:
@@ -50,6 +54,14 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 - **Memory Usage**: < 200MB including model loading
 - **Latency**: < 50ms from hand movement to detection
 - **Initialization**: < 3 seconds to load and start tracking
+- **Resize Performance**: < 16ms (1 frame) to recalculate coordinates on window resize
+
+### Screen Adaptation
+- **Window Resize Events**: Automatic detection and handling of window size changes
+- **Canvas Scaling**: Overlay canvas resizes to match new window dimensions
+- **Coordinate Remapping**: Hand landmarks adjust to new screen coordinate system
+- **Smooth Transitions**: No visual glitches or tracking interruptions during resize
+- **Responsive Design**: Works across different screen sizes and aspect ratios
 
 ### Hand Landmark Model
 ```
@@ -104,6 +116,11 @@ HandTracker.isPointing(): { pointing: boolean, direction: {x, y} }
 HandTracker.getPinchStrength(): number // 0-1
 HandTracker.getHandCenter(hand): {x, y}
 HandTracker.getFingerPositions(hand): Array<{x, y}>
+
+// Screen adaptation methods
+HandTracker.handleResize(): void // Called automatically on window resize
+HandTracker.updateCanvasSize(): void // Updates overlay canvas dimensions
+HandTracker.getScreenDimensions(): {width, height} // Current screen size
 ```
 
 ## Integration Points
@@ -151,6 +168,9 @@ HandTracker.getFingerPositions(hand): Array<{x, y}>
 - [ ] Gesture events fire within 100ms of gesture start
 - [ ] Works across major browsers (Chrome, Firefox, Safari, Edge)
 - [ ] Clear visual feedback for all tracking states
+- [ ] Seamless window resize handling without tracking interruption
+- [ ] Canvas and coordinates update correctly on screen size changes
+- [ ] No visual glitches during resize operations
 
 ## Development Considerations
 - **Browser Compatibility**: Test across all major browsers

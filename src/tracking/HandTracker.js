@@ -84,6 +84,7 @@ class HandTracker {
     // Bind methods
     this.handleHandUpdate = this.handleHandUpdate.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
+    this.handleResize = this.handleResize.bind(this);
   }
 
   async init(options = {}) {
@@ -187,6 +188,9 @@ class HandTracker {
 
       this.isInitialized = true;
       this.createUI();
+      
+      // Add resize event listener
+      window.addEventListener('resize', this.handleResize);
       
       console.log('HandTracker initialized successfully');
       this.emit('initialized');
@@ -913,8 +917,49 @@ class HandTracker {
     }
   }
 
+
+  getUpdateRate() {
+    return this.updateRate;
+  }
+
+  handleResize() {
+    // Throttle resize events to avoid excessive processing
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    
+    this.resizeTimeout = setTimeout(() => {
+      this.updateCanvasSize();
+      this.emit('resize', this.getScreenDimensions());
+    }, 100);
+  }
+
+  updateCanvasSize() {
+    if (this.handOverlay) {
+      this.handOverlay.width = window.innerWidth;
+      this.handOverlay.height = window.innerHeight;
+      this.handOverlay.style.width = '100vw';
+      this.handOverlay.style.height = '100vh';
+    }
+  }
+
+  getScreenDimensions() {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  }
+
   dispose() {
     this.stop();
+    
+    // Remove resize event listener
+    window.removeEventListener('resize', this.handleResize);
+    
+    // Clear resize timeout
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
     
     // Clean up DOM elements
     if (this.videoElement) {
@@ -940,10 +985,6 @@ class HandTracker {
     
     this.isInitialized = false;
     this.eventListeners = {};
-  }
-
-  getUpdateRate() {
-    return this.updateRate;
   }
 }
 
