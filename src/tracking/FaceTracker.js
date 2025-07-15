@@ -155,7 +155,12 @@ class FaceTracker {
       this.createUI();
       
       // Load any existing calibration data
-      this.loadCalibrationData();
+      const calibrationLoaded = this.loadCalibrationData();
+      
+      // Show notification if using default calibration
+      if (calibrationLoaded && this.calibrationMap.size > 0) {
+        this.showCalibrationInfo();
+      }
       
       console.log('FaceTracker initialized successfully');
       this.emit('initialized');
@@ -889,6 +894,44 @@ class FaceTracker {
     }, 3000);
   }
 
+  showCalibrationInfo() {
+    const isDevelopmentMode = window.location.port === '3001' || window.location.href.includes('localhost');
+    const isDefaultCalibration = isDevelopmentMode && !localStorage.getItem('faceTracker_calibration');
+    
+    if (isDefaultCalibration) {
+      const infoDiv = document.createElement('div');
+      infoDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 123, 255, 0.9);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        text-align: center;
+        z-index: 10002;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      `;
+      
+      infoDiv.innerHTML = `
+        <strong>Development Mode:</strong> Using default calibration<br>
+        <small>Press SPACE to recalibrate for your setup</small>
+      `;
+      
+      document.body.appendChild(infoDiv);
+      
+      // Auto-remove after 4 seconds
+      setTimeout(() => {
+        if (infoDiv.parentNode) {
+          infoDiv.remove();
+        }
+      }, 4000);
+    }
+  }
+
   saveCalibrationData() {
     try {
       const calibrationData = {
@@ -914,6 +957,66 @@ class FaceTracker {
     } catch (error) {
       console.error('Failed to load calibration data:', error);
     }
+    
+    // Load default calibration for development mode
+    return this.loadDefaultCalibration();
+  }
+
+  loadDefaultCalibration() {
+    // Check if we're in development mode (console window vs fullscreen)
+    const isDevelopmentMode = window.location.port === '3001' || window.location.href.includes('localhost');
+    
+    if (isDevelopmentMode) {
+      // Default calibration values for npm run dev:eyetracking workflow
+      // These are based on a typical development setup with console window
+      const defaultCalibrationPoints = [
+        [0, {
+          screenPoint: { x: 124.5, y: 112.60000000000001 },
+          faceData: {
+            faceCenter: { x: 0.5502247214317322, y: 0.4544675722718239 },
+            noseTip: { x: 0.5944936275482178, y: 0.47204527258872986 },
+            headDirection: { x: 0.9997687166012494, y: 1.7321843185139076 }
+          }
+        }],
+        [1, {
+          screenPoint: { x: 1120.5, y: 112.60000000000001 },
+          faceData: {
+            faceCenter: { x: 0.4988580048084259, y: 0.48162125796079636 },
+            noseTip: { x: 0.5061836242675781, y: 0.512454628944397 },
+            headDirection: { x: 0.15977421023224472, y: 1.9936078354943991 }
+          }
+        }],
+        [2, {
+          screenPoint: { x: 622.5, y: 563 },
+          faceData: {
+            faceCenter: { x: 0.5345018059015274, y: 0.5277667865157127 },
+            noseTip: { x: 0.5685189962387085, y: 0.5801661014556885 },
+            headDirection: { x: 0.5398392266425879, y: 1.92576572027283 }
+          }
+        }],
+        [3, {
+          screenPoint: { x: 124.5, y: 1013.4 },
+          faceData: {
+            faceCenter: { x: 0.5757335424423218, y: 0.6005130559206009 },
+            noseTip: { x: 0.6277220845222473, y: 0.6659359931945801 },
+            headDirection: { x: 0.7353668168014068, y: 1.8599020524606575 }
+          }
+        }],
+        [4, {
+          screenPoint: { x: 1120.5, y: 1013.4 },
+          faceData: {
+            faceCenter: { x: 0.4771008640527725, y: 0.5838421583175659 },
+            noseTip: { x: 0.4809936583042145, y: 0.6551327705383301 },
+            headDirection: { x: 0.05464630026328456, y: 1.9992533060789306 }
+          }
+        }]
+      ];
+
+      this.calibrationMap = new Map(defaultCalibrationPoints);
+      console.log('Loaded default calibration data for development mode:', this.calibrationMap.size, 'points');
+      return true;
+    }
+    
     return false;
   }
 
