@@ -59,10 +59,20 @@ Each printable character is assigned themed audio-visual feedback:
   - Each character maps to single-item array containing one sound definition
   - Provides consistent, predictable audio feedback for muscle memory
   - Uses `playThemeSound()` method with `sounds[0]` selection
+- **Theme 2 (Xylophone/Piano)**: Musical scale mapping with pleasant tones
+  - Characters arranged in chromatic scale progression for natural musical feel
+  - **Letters (A-Z)**: Map to 26 ascending chromatic notes starting from C3
+    - A=C3, B=C#3, C=D3, D=D#3, E=E3, F=F3, G=F#3, H=G3, I=G#3, J=A3, K=A#3, L=B3, M=C4, N=C#4, O=D4, P=D#4, Q=E4, R=F4, S=F#4, T=G4, U=G#4, V=A4, W=A#4, X=B4, Y=C5, Z=C#5
+  - **Numbers (0-9)**: Map to major pentatonic scale for harmonic consonance
+    - 0=C4, 1=D4, 2=E4, 3=G4, 4=A4, 5=C5, 6=D5, 7=E5, 8=G5, 9=A5
+  - **Symbols**: Map to percussive and bell-like tones for textural variety
+    - Common symbols use higher octave metallic tones (C6-C7 range)
+  - **Synth Type**: Bright, crystalline 'pluck' synth with moderate sustain
+  - **Musical Characteristics**: Playful yet pleasant, encourages melodic exploration
 - **Future Themes**: Array structure designed for variations
   - Multi-item arrays enable sound variations within same character theme
   - Maintains deterministic behavior through theme-specific selection logic
-  - Supports progressive complexity (Theme 2: random from set, Theme 3: context-aware, etc.)
+  - Supports progressive complexity (Theme 3: random from set, Theme 4: context-aware, etc.)
 - **Implementation**: Function-based theme definitions return sound descriptor arrays
   - Format: `{ synth: 'type', note: 'pitch', duration: 'length' }`
   - Synth types: 'pluck', 'membrane', 'metal', 'synth'
@@ -131,6 +141,9 @@ Each printable character is assigned themed audio-visual feedback:
 ## Future Considerations
 - Volume control slider
 - Theme switching (silly → musical → nature)
+  - **Theme 2 Implementation**: Xylophone/Piano musical scale theme ready for development
+  - **Theme Selection**: UI control to switch between Theme 1 (animal sounds) and Theme 2 (musical)
+  - **Theme Persistence**: Remember user's theme preference across sessions
 - Record/playback sessions
 - Multi-key combos for special effects
 
@@ -206,3 +219,4 @@ The project now consists of three separate applications to maintain separation o
 - v1.2 - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
 - v1.3 - Theme system architecture with deterministic Theme 1 implementation
 - v1.4 - Multi-application architecture with eye tracking integration
+- v1.5 - Added Theme 2 (Xylophone/Piano) specification with musical scale mapping
