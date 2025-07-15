@@ -18,13 +18,22 @@ An experimental Electron application that creates joyful audio-visual feedback t
 - **Exit**: Custom minimal close button (✕) in top-right corner
 
 ### Key Mapping System
-Each alphabet key (A-Z) is assigned:
-- **Theme**: Animal + related items
-- **Emoji Set**: Minimum 3 related emojis (randomly selected per press)
-- **Sound Set**: 2-3 synthesized sounds matching the theme
+Each printable character is assigned themed audio-visual feedback:
+
+**Letters (A-Z)**: Animal + related items themes
 - **Example**: D = Dog Theme
   - Emojis: [🐶, 🦴, 🎾]
   - Sounds: Low "woof", high "yip", squeaky toy
+
+**Numbers (0-9)**: Numeric and symbolic themes  
+- **Example**: 3 = Three Theme
+  - Emojis: [🥉, 👌, 🕒] 
+  - Sounds: Three-note sequence
+
+**Symbols**: Functional and expressive themes
+- **Example**: ! = Exclamation Theme
+  - Emojis: [❗, ⚠️, 💥]
+  - Sounds: Sharp accent + percussion
 
 ### Animation Behavior
 - **Spawn**: Emojis appear at bottom of screen
@@ -55,9 +64,10 @@ Each alphabet key (A-Z) is assigned:
 ## Success Criteria
 
 ### Functional Tests
-- [ ] All 26 keys produce unique themed output
+- [ ] All printable characters (A-Z, 0-9, symbols) produce unique themed output
 - [ ] Random selection works across emoji/sound sets
-- [ ] Multiple rapid keypresses handled smoothly
+- [ ] Multiple rapid keypresses handled smoothly (including same-key repeats)
+- [ ] Dvorak and alternative keyboard layouts work correctly
 - [ ] Exit button closes application cleanly
 
 ### Experience Tests
@@ -66,8 +76,9 @@ Each alphabet key (A-Z) is assigned:
 - [ ] Natural to try all keys without prompting
 - [ ] No performance degradation over 5 minutes
 
-## Complete Key Mapping Reference
+## Character Mapping Reference
 
+### Letters (A-Z)
 | Key | Theme | Emojis | Sound Types |
 |-----|-------|---------|-------------|
 | A | Ant/Apple | [🐜, 🍎, 🍏] | Tiny steps, crunch |
@@ -76,6 +87,25 @@ Each alphabet key (A-Z) is assigned:
 | D | Dog/Toys | [🐶, 🦴, 🎾] | Woof, squeak |
 | ... | ... | ... | ... |
 | Z | Zebra/Zigzag | [🦓, ⚡, 〰️] | Whinny, zap |
+
+### Numbers (0-9)
+| Key | Theme | Emojis | Sound Types |
+|-----|-------|---------|-------------|
+| 0 | Zero/Circle | [🥯, ⭕, 🔮] | Drone, empty thump |
+| 1 | One/First | [🥇, 👆, 🕐] | Single ping, tone |
+| 2 | Two/Pair | [✌️, 👥, 🕑] | Double ping |
+| 3 | Three/Trio | [🥉, 👌, 🕒] | Triple ping sequence |
+| ... | ... | ... | ... |
+| 9 | Nine/Lives | [🐱, ☁️, 🕘] | Nine harmony |
+
+### Common Symbols
+| Key | Theme | Emojis | Sound Types |
+|-----|-------|---------|-------------|
+| ! | Exclamation | [❗, ⚠️, 💥] | Sharp accent |
+| ? | Question | [❓, 🤔, 🔍] | Rising tone |
+| @ | At/Email | [📧, 🌐, 📍] | Digital chime |
+| # | Hash/Tag | [🏷️, 🎵, #️⃣] | Sharp percussion |
+| ... | ... | ... | ... |
 
 ## Future Considerations
 - Volume control slider
@@ -97,15 +127,18 @@ Each alphabet key (A-Z) is assigned:
 - **Reliable Synths**: Use stable Tone.js synthesizers (synth, pluck, membrane, metal) 
 - **Avoid Problematic Types**: Oscillator and NoiseSynth cause timing errors with rapid keypresses
 - **Rapid Keypress Timing**: CRITICAL - Tone.js throws "Start time must be strictly greater than previous start time" on rapid keypresses
-- **Timing Solution**: Implement audio context time scheduling or synth instance pooling for concurrent notes
+- **Timing Solution**: Implement synth instance pooling (4 instances per type) with forced release for busy synths
+- **Random Timing Offset**: Add 0-5ms random delay to prevent exact timing collisions
+- **Same-Key Rapid Presses**: Force release existing notes when all synths are busy to prevent audio dropouts
 - **Error Handling**: Wrap all audio playback in try-catch blocks with graceful fallbacks
 - **Polyphony Safety**: Implement proper triggerAttackRelease vs triggerAttack/triggerRelease patterns
-- **Audio Context Management**: Ensure proper Tone.js context timing to prevent scheduling conflicts
+- **Audio Context Management**: Use Tone.now() scheduling with reduced buffer times for faster reuse
 
 ### Input Filtering
-- **Key Validation**: Only process single-character keys (A-Z) using `key.length === 1` check
-- **Modifier Filtering**: Exclude META, CTRL, ALT, SHIFT and other modifier keys
-- **Case Handling**: Convert to uppercase for consistent theme mapping
+- **Character Support**: Process all printable characters (A-Z, 0-9, symbols) using `key.length === 1` check
+- **Modifier Filtering**: Exclude META, CTRL, ALT, SHIFT, arrow keys, function keys, and other non-printable keys
+- **Layout Compatibility**: Map by actual character produced, not key position (supports Dvorak, QWERTZ, etc.)
+- **Case Handling**: Convert letters to uppercase for consistent theme mapping
 
 ### Performance Optimizations  
 - **Emoji Limits**: Hard cap at 20 concurrent emojis with oldest-first removal
@@ -118,5 +151,6 @@ Each alphabet key (A-Z) is assigned:
 - **Package Structure**: Remove conflicting "main" field to avoid Parcel library target errors
 
 ## Version History
-- v1.0 - Initial MVP specification
+- v1.0 - Initial MVP specification (26 letter keys only)
 - v1.1 - Implementation requirements and constraints based on development experience
+- v1.2 - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
