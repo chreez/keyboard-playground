@@ -5,6 +5,7 @@ class EmojiAnimator {
     this.emojis = [];
     this.lastTime = 0;
     this.isRunning = false;
+    this.maxEmojis = 20; // Performance limit
   }
 
   start() {
@@ -18,6 +19,11 @@ class EmojiAnimator {
   }
 
   spawnEmoji(key, x = null, y = null) {
+    // Limit concurrent emojis for performance
+    if (this.emojis.length >= this.maxEmojis) {
+      this.emojis.shift(); // Remove oldest emoji
+    }
+
     const emojiSet = this.getEmojiSet(key);
     const randomEmoji = emojiSet[Math.floor(Math.random() * emojiSet.length)];
     
