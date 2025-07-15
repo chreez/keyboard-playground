@@ -88,14 +88,19 @@ Each alphabet key (A-Z) is assigned:
 ### Security Requirements
 - **Content Security Policy**: Must include CSP meta tag to eliminate Electron security warnings
   ```html
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; worker-src blob:; connect-src blob: 'self';">
   ```
+- **CSP Worker Constraints**: Tone.js requires blob workers for audio processing - must allow `worker-src blob:` and `connect-src blob:`
+- **Audio Worker Compatibility**: Modern Tone.js versions create blob workers that will fail without proper CSP permissions
 
 ### Audio System Constraints
 - **Reliable Synths**: Use stable Tone.js synthesizers (synth, pluck, membrane, metal) 
 - **Avoid Problematic Types**: Oscillator and NoiseSynth cause timing errors with rapid keypresses
+- **Rapid Keypress Timing**: CRITICAL - Tone.js throws "Start time must be strictly greater than previous start time" on rapid keypresses
+- **Timing Solution**: Implement audio context time scheduling or synth instance pooling for concurrent notes
 - **Error Handling**: Wrap all audio playback in try-catch blocks with graceful fallbacks
 - **Polyphony Safety**: Implement proper triggerAttackRelease vs triggerAttack/triggerRelease patterns
+- **Audio Context Management**: Ensure proper Tone.js context timing to prevent scheduling conflicts
 
 ### Input Filtering
 - **Key Validation**: Only process single-character keys (A-Z) using `key.length === 1` check

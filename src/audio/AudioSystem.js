@@ -3,7 +3,8 @@ import * as Tone from 'tone';
 class AudioSystem {
   constructor() {
     this.isInitialized = false;
-    this.synths = new Map();
+    this.synthPools = new Map();
+    this.poolSize = 4; // Multiple instances per synth type for polyphony
   }
 
   async initialize() {
@@ -20,28 +21,59 @@ class AudioSystem {
   }
 
   setupSynths() {
-    // Create different synth types for variety
-    this.synths.set('oscillator', new Tone.Oscillator().toDestination());
-    this.synths.set('pluck', new Tone.PluckSynth().toDestination());
-    this.synths.set('membrane', new Tone.MembraneSynth().toDestination());
-    this.synths.set('metal', new Tone.MetalSynth().toDestination());
-    this.synths.set('noise', new Tone.NoiseSynth().toDestination());
-    this.synths.set('synth', new Tone.Synth().toDestination());
+    // Create pools of synth instances for polyphony without timing conflicts
+    const synthTypes = ['pluck', 'membrane', 'metal', 'synth'];
+    
+    synthTypes.forEach(type => {
+      const pool = [];
+      for (let i = 0; i < this.poolSize; i++) {
+        let synth;
+        switch(type) {
+          case 'pluck':
+            synth = new Tone.PluckSynth().toDestination();
+            break;
+          case 'membrane':
+            synth = new Tone.MembraneSynth().toDestination();
+            break;
+          case 'metal':
+            synth = new Tone.MetalSynth().toDestination();
+            break;
+          case 'synth':
+          default:
+            synth = new Tone.Synth().toDestination();
+            break;
+        }
+        pool.push({ synth, inUse: false });
+      }
+      this.synthPools.set(type, pool);
+    });
   }
 
   playThemeSound(key) {
+    console.log(`[AUDIO_SYSTEM] playThemeSound called for key: ${key}`);
+    
     if (!this.isInitialized) {
+      console.log(`[AUDIO_SYSTEM] Not initialized, attempting to initialize...`);
       this.initialize();
       return;
     }
 
     const sounds = this.getThemeSounds(key);
+    console.log(`[AUDIO_SYSTEM] Found ${sounds.length} sounds for key ${key}`);
+    
+    if (sounds.length === 0) {
+      console.warn(`[AUDIO_SYSTEM] No sounds found for key: ${key}`);
+      return;
+    }
+    
     const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+    console.log(`[AUDIO_SYSTEM] Selected random sound, attempting to play...`);
     
     try {
       randomSound.play();
+      console.log(`[AUDIO_SYSTEM] Sound played successfully for key: ${key}`);
     } catch (error) {
-      console.error('Failed to play sound:', error);
+      console.error(`[AUDIO_SYSTEM] Failed to play sound for key ${key}:`, error);
     }
   }
 
@@ -159,36 +191,51 @@ class AudioSystem {
     const soundDefs = themeFunc();
     return soundDefs.map(def => ({
       play: () => {
-        const synth = this.synths.get(def.synth);
-        if (!synth) {
-          console.warn(`Synth ${def.synth} not found`);
+        const pool = this.synthPools.get(def.synth);
+        if (!pool) {
+          console.warn(`Synth pool ${def.synth} not found`);
           return;
         }
 
+        // Find an available synth from the pool
+        const availableSynth = pool.find(item => !item.inUse);
+        if (!availableSynth) {
+          console.warn(`[SYNTH] All ${def.synth} synths in use, using first one`);
+          // Fallback to first synth if all are busy
+          availableSynth = pool[0];
+        }
+
+        const { synth } = availableSynth;
+        availableSynth.inUse = true;
+
         try {
-          if (synth.triggerAttackRelease) {
-            synth.triggerAttackRelease(def.note, def.duration);
-          } else if (synth.triggerAttack && synth.triggerRelease) {
-            synth.triggerAttack(def.note);
-            const durationMs = Tone.Time(def.duration).toMilliseconds();
-            setTimeout(() => {
-              try {
-                synth.triggerRelease();
-              } catch (releaseError) {
-                console.warn('Error releasing synth:', releaseError);
-              }
-            }, durationMs);
-          }
+          console.log(`[SYNTH] Playing ${def.synth} synth with note ${def.note} for ${def.duration}`);
+          
+          // Use scheduled timing to avoid conflicts
+          const now = Tone.now();
+          const duration = Tone.Time(def.duration).toSeconds();
+          
+          synth.triggerAttackRelease(def.note, def.duration, now);
+          console.log(`[SYNTH] triggerAttackRelease scheduled at ${now}`);
+          
+          // Mark synth as available after the note duration plus small buffer
+          setTimeout(() => {
+            availableSynth.inUse = false;
+          }, (duration + 0.1) * 1000); // Add 100ms buffer
+          
         } catch (error) {
-          console.warn('Error playing sound:', error);
+          console.warn(`[SYNTH] Error playing ${def.synth} sound:`, error);
+          availableSynth.inUse = false; // Release on error
         }
       }
     }));
   }
 
   dispose() {
-    this.synths.forEach(synth => synth.dispose());
-    this.synths.clear();
+    this.synthPools.forEach(pool => {
+      pool.forEach(item => item.synth.dispose());
+    });
+    this.synthPools.clear();
     this.isInitialized = false;
   }
 }

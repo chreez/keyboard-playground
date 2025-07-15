@@ -19,6 +19,12 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:3000');
     win.webContents.openDevTools();
+    
+    // Forward console logs to main process
+    win.webContents.on('console-message', (event, level, message, line, sourceId) => {
+      console.log(`[RENDERER ${level}]:`, message);
+      if (line) console.log(`  at line ${line} in ${sourceId}`);
+    });
   } else {
     win.loadFile(path.join(__dirname, '../dist/renderer/index.html'));
   }

@@ -37,15 +37,25 @@ const App = () => {
       
       // Only handle single letter keys (A-Z), filter out modifiers and special keys
       if (key.length === 1 && key >= 'A' && key <= 'Z') {
+        console.log(`[KEY] ${key} pressed - triggering audio and animation`);
+        
         // Play themed sound
         if (audioSystemRef.current) {
+          console.log(`[AUDIO] Attempting to play sound for key: ${key}`);
           audioSystemRef.current.playThemeSound(key);
+        } else {
+          console.warn(`[AUDIO] Audio system not initialized for key: ${key}`);
         }
         
         // Spawn emoji animation
         if (animatorRef.current) {
+          console.log(`[ANIMATION] Spawning emoji for key: ${key}`);
           animatorRef.current.spawnEmoji(key);
+        } else {
+          console.warn(`[ANIMATION] Animator not initialized for key: ${key}`);
         }
+      } else {
+        console.log(`[KEY] Ignored key: "${event.key}" (length: ${event.key.length})`);
       }
     };
 
