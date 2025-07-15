@@ -17,6 +17,10 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 - **Handedness Detection**: Identify left/right hand with confidence scores
 - **Real-time Updates**: 30+ FPS tracking with smooth motion
 - **Occlusion Handling**: Graceful degradation when hands overlap or partially exit frame
+- **Auto-start Tracking**: Automatically begins tracking after camera initialization
+  - No manual activation required
+  - Seamless user experience from startup
+  - ESC key toggles tracking on/off after auto-start
 - **Screen Resize Support**: Automatic readjustment when window/screen size changes
   - Canvas dimensions update immediately on resize
   - Landmark coordinates recalculate for new screen dimensions

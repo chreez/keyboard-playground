@@ -194,6 +194,10 @@ class HandTracker {
       
       console.log('HandTracker initialized successfully');
       this.emit('initialized');
+      
+      // Auto-start tracking after initialization
+      await this.start();
+      console.log('HandTracker auto-started tracking');
     } catch (error) {
       console.error('Failed to initialize HandTracker:', error);
       

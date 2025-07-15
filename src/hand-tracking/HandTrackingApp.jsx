@@ -247,12 +247,13 @@ const HandTrackingApp = () => {
           <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
             <p><strong>Controls:</strong></p>
             <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
-              <li><kbd>ESC</kbd> - Toggle tracking</li>
+              <li><kbd>ESC</kbd> - Stop/Start tracking</li>
               <li><kbd>TAB</kbd> - Toggle landmarks</li>
               <li><kbd>F1</kbd> - Show status</li>
               <li><kbd>H</kbd> - Toggle help</li>
               <li><kbd>G</kbd> - Toggle gesture mode</li>
             </ul>
+            <p><strong>Note:</strong> Tracking starts automatically when initialized</p>
             <p><strong>Gestures:</strong></p>
             <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
               <li>👉 Pointing</li>
@@ -492,7 +493,7 @@ const HandTrackingApp = () => {
           <p>Initializing hand tracking...</p>
         )}
         {status.initialized && !status.tracking && (
-          <p>Press ESC or click "Start Tracking" to begin</p>
+          <p>Starting hand tracking...</p>
         )}
         {status.tracking && handData.length === 0 && (
           <p>Show your hands to the camera</p>
