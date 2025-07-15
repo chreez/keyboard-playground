@@ -76,6 +76,52 @@ This is an experimental Electron application that creates joyful audio-visual fe
 
 The application should produce immediate delight - users should smile within the first 10 keypresses with zero learning curve required. All characters must produce unique themed output with smooth performance during rapid keypresses and multi-minute sessions.
 
+## Development Commands
+
+### Application Suite
+The project consists of three separate applications:
+
+#### 1. Keyboard Playground (Original)
+```bash
+# Development mode (recommended)
+npm run dev          # Port 3000
+
+# Production build and run
+npm start
+npm run build        # Build only
+```
+
+#### 2. Eye Tracking Test (Standalone)
+```bash
+# Development mode
+npm run dev:eyetracking    # Port 3001
+
+# Production build and run
+npm run start:eyetracking
+npm run build:eyetracking  # Build only
+```
+
+#### 3. Integrated Experience
+```bash
+# Development mode
+npm run dev:integrated     # Port 3002
+
+# Production build and run
+npm run start:integrated
+npm run build:integrated   # Build only
+```
+
+### Development Workflow
+```bash
+# Choose your target application:
+npm run dev                # Original playground
+npm run dev:eyetracking    # Eye tracking test
+npm run dev:integrated     # Combined experience
+
+# Each opens in fullscreen Electron window
+# Changes auto-reload via Parcel + Electron restart
+```
+
 ## Development Workflow
 
 ### Design Decision Process
@@ -92,6 +138,11 @@ When making significant changes to the codebase, follow this workflow:
 - **Descriptive Messages**: Include both what changed and why
 - **Spec Updates**: Always update specs when making design decisions
 - **Future-Proofing**: Structure code to allow for future variations (e.g., array structure for themes)
+- **Size Limits**: Keep commits focused and manageable
+  - Maximum 500 lines changed per commit (excluding generated files)
+  - If a feature requires more, break into logical sub-commits
+  - Each commit should compile and pass basic functionality tests
+  - Large refactors should be staged across multiple commits
 
 ### Design Patterns Used
 - **Theme System**: Audio uses array structure with single-item arrays for Theme 1 (deterministic)

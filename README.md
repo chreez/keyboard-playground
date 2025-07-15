@@ -39,17 +39,31 @@ Each alphabet key triggers themed emoji and sound combinations:
 
 ## Development
 
-1. **Start development mode** (recommended)
-   ```bash
-   npm run dev
-   ```
-   This will start the Electron app with hot reloading enabled and development tools.
+### Application Suite
+The project consists of three separate applications:
 
-2. **Run production build**
-   ```bash
-   npm start
-   ```
-   This builds the app and runs it in production mode.
+#### 1. Keyboard Playground (Original)
+```bash
+npm run dev          # Development mode (port 3000)
+npm start            # Production build and run
+```
+
+#### 2. Eye Tracking Test (Standalone)
+```bash
+npm run dev:eyetracking    # Development mode (port 3001)
+npm start:eyetracking      # Production build and run
+```
+
+#### 3. Integrated Experience
+```bash
+npm run dev:integrated     # Development mode (port 3002)
+npm start:integrated       # Production build and run
+```
+
+### Choose Your Experience
+- **Original**: Classic keyboard playground with audio-visual feedback
+- **Eye Tracking**: Standalone eye tracking test with mouse simulation
+- **Integrated**: Combined keyboard + eye tracking with mode switching
 
 ## Usage
 

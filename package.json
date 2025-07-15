@@ -8,21 +8,39 @@
     "dev:renderer": "parcel src/renderer/index.html --port 3000",
     "dev:electron": "wait-on http://localhost:3000 && electron src/main.js --dev",
     "build": "npm run build:renderer",
-    "build:renderer": "parcel build src/renderer/index.html --dist-dir dist/renderer --public-url ./"
+    "build:renderer": "parcel build src/renderer/index.html --dist-dir dist/renderer --public-url ./",
+    "start:eyetracking": "npm run build:eyetracking && electron src/main-eyetracking.js",
+    "dev:eyetracking": "concurrently \"npm run dev:eyetracking:renderer\" \"npm run dev:eyetracking:electron\"",
+    "dev:eyetracking:renderer": "parcel src/eye-tracking/index.html --port 3001",
+    "dev:eyetracking:electron": "wait-on http://localhost:3001 && electron src/main-eyetracking.js --dev",
+    "build:eyetracking": "parcel build src/eye-tracking/index.html --dist-dir dist/eye-tracking --public-url ./",
+    "start:integrated": "npm run build:integrated && electron src/main-integrated.js",
+    "dev:integrated": "concurrently \"npm run dev:integrated:renderer\" \"npm run dev:integrated:electron\"",
+    "dev:integrated:renderer": "parcel src/integrated/index.html --port 3002",
+    "dev:integrated:electron": "wait-on http://localhost:3002 && electron src/main-integrated.js --dev",
+    "build:integrated": "parcel build src/integrated/index.html --dist-dir dist/integrated --public-url ./"
   },
-  "keywords": ["electron", "keyboard", "audio", "visual", "playground"],
+  "keywords": [
+    "electron",
+    "keyboard",
+    "audio",
+    "visual",
+    "playground"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^27.0.0",
-    "parcel": "^2.9.0",
     "@parcel/transformer-react-refresh-wrap": "^2.9.0",
     "concurrently": "^8.2.0",
+    "electron": "^27.0.0",
+    "parcel": "^2.9.0",
     "wait-on": "^7.2.0"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tone": "^14.7.77"
+    "tone": "^14.7.77",
+    "webgazer": "^2.1.2",
+    "@mediapipe/tasks-vision": "^0.10.3"
   }
 }

@@ -171,8 +171,38 @@ Each printable character is assigned themed audio-visual feedback:
 - **Hot Reloading**: Separate dev scripts for renderer (port 3000) and electron processes
 - **Package Structure**: Remove conflicting "main" field to avoid Parcel library target errors
 
+## Multi-Application Architecture (v1.4)
+
+### Application Suite
+The project now consists of three separate applications to maintain separation of concerns:
+
+#### 1. Keyboard Playground (Original)
+- **Command**: `npm run dev` (port 3000)
+- **Purpose**: Core keyboard-to-audio-visual experience
+- **Status**: Production-ready, no regressions
+- **Features**: All original functionality preserved
+
+#### 2. Eye Tracking Test
+- **Command**: `npm run dev:eyetracking` (port 3001)
+- **Purpose**: Standalone eye tracking development and testing
+- **Status**: Mock implementation using mouse simulation
+- **Features**: Calibration, crosshair, confidence indicators, all hotkeys
+
+#### 3. Integrated Experience
+- **Command**: `npm run dev:integrated` (port 3002)
+- **Purpose**: Combined keyboard + eye tracking experience
+- **Status**: Fully functional with mock eye tracking
+- **Features**: Mode switching, smooth transitions, gaze-controlled spawning
+
+### Integration Architecture
+- **Mode 1**: Keyboard-only (default/fallback) - original targeting system
+- **Mode 2**: Eye-controlled spawn when tracking confidence > 50%
+- **Smooth Transitions**: 500ms crosshair fade, visual mode indicators
+- **Graceful Degradation**: Falls back to keyboard mode if tracking fails
+
 ## Version History
 - v1.0 - Initial MVP specification (26 letter keys only)
 - v1.1 - Implementation requirements and constraints based on development experience
 - v1.2 - Expanded character support (A-Z, 0-9, symbols), Dvorak compatibility, rapid keypress fixes
 - v1.3 - Theme system architecture with deterministic Theme 1 implementation
+- v1.4 - Multi-application architecture with eye tracking integration
