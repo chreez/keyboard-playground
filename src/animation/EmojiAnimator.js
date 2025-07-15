@@ -6,6 +6,10 @@ class EmojiAnimator {
     this.lastTime = 0;
     this.isRunning = false;
     this.maxEmojis = 20; // Performance limit
+    
+    // Targeting system configuration
+    this.padding = 0.1; // 10% padding from edges
+    this.centerBias = 0.7; // 70% bias toward center
   }
 
   start() {
@@ -18,7 +22,7 @@ class EmojiAnimator {
     this.isRunning = false;
   }
 
-  spawnEmoji(key, x = null, y = null) {
+  spawnEmoji(key, targetX = null, targetY = null) {
     // Limit concurrent emojis for performance
     if (this.emojis.length >= this.maxEmojis) {
       this.emojis.shift(); // Remove oldest emoji
@@ -27,26 +31,66 @@ class EmojiAnimator {
     const emojiSet = this.getEmojiSet(key);
     const randomEmoji = emojiSet[Math.floor(Math.random() * emojiSet.length)];
     
-    // Default spawn at bottom center if no position specified
-    const spawnX = x !== null ? x : this.canvas.width / 2 + (Math.random() - 0.5) * 200;
-    const spawnY = y !== null ? y : this.canvas.height - 50;
+    // Use targeting system if no position specified
+    let spawnX, spawnY;
+    if (targetX !== null && targetY !== null) {
+      spawnX = targetX;
+      spawnY = targetY;
+    } else {
+      const targetPosition = this.generateTargetPosition();
+      spawnX = targetPosition.x;
+      spawnY = targetPosition.y;
+    }
 
     const emoji = {
       emoji: randomEmoji,
       x: spawnX,
       y: spawnY,
-      vx: (Math.random() - 0.5) * 100, // Random horizontal velocity
-      vy: -Math.random() * 150 - 100,  // Upward velocity
+      vx: (Math.random() - 0.5) * 120, // Random horizontal velocity
+      vy: -Math.random() * 100 - 80,   // Gentle upward bias
       rotation: 0,
-      rotationSpeed: (Math.random() - 0.5) * 5,
-      scale: 0.5 + Math.random() * 0.5,
+      rotationSpeed: (Math.random() - 0.5) * 4,
+      scale: 0.8 + Math.random() * 0.4, // Slightly larger emojis
       opacity: 1,
-      lifetime: 5000, // 5 seconds
+      lifetime: 6000, // 6 seconds for more viewing time
       age: 0,
-      size: 48
+      size: 52 // Slightly larger size
     };
 
     this.emojis.push(emoji);
+  }
+
+  generateTargetPosition() {
+    // Calculate padded boundaries
+    const paddingX = this.canvas.width * this.padding;
+    const paddingY = this.canvas.height * this.padding;
+    const minX = paddingX;
+    const maxX = this.canvas.width - paddingX;
+    const minY = paddingY;
+    const maxY = this.canvas.height - paddingY;
+    
+    // Center-biased distribution
+    const centerX = this.canvas.width / 2;
+    const centerY = this.canvas.height / 2;
+    
+    let x, y;
+    
+    if (Math.random() < this.centerBias) {
+      // Center-biased spawn (weighted toward center)
+      const biasRange = Math.min(this.canvas.width, this.canvas.height) * 0.3; // 30% of screen for center bias
+      x = centerX + (Math.random() - 0.5) * biasRange;
+      y = centerY + (Math.random() - 0.5) * biasRange;
+      
+      // Clamp to padded boundaries
+      x = Math.max(minX, Math.min(maxX, x));
+      y = Math.max(minY, Math.min(maxY, y));
+    } else {
+      // Random spawn within padded area
+      x = minX + Math.random() * (maxX - minX);
+      y = minY + Math.random() * (maxY - minY);
+    }
+    
+    return { x, y };
   }
 
   getEmojiSet(key) {

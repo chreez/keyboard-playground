@@ -36,10 +36,17 @@ Each printable character is assigned themed audio-visual feedback:
   - Sounds: Sharp accent + percussion
 
 ### Animation Behavior
-- **Spawn**: Emojis appear at bottom of screen
+- **Spawn**: Emojis appear at randomized locations with targeting system
 - **Motion**: Float upward with slight physics (wobble, rotation)
 - **Lifetime**: Fade out after reaching top or after 5 seconds
 - **Concurrency**: Support 20+ simultaneous emojis without performance loss
+
+### Targeting System (Integration Point)
+- **Spawn Patterns**: Randomized locations across screen with padding constraints
+- **Padding**: 10% margin from screen edges to keep content centered
+- **Distribution**: Weighted center bias for more natural visual clustering
+- **Modes**: Support for different spawn patterns (random, center-bias, future: gaze-targeted)
+- **API**: `spawnEmoji(key, targetX?, targetY?)` with optional position override
 
 ### Audio System
 - **Engine**: Tone.js for synthesis
