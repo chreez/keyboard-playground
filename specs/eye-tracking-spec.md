@@ -13,9 +13,25 @@ A standalone module that provides real-time attention tracking using standard we
 
 ### Calibration System
 - **Method**: 5-point calibration grid (corners + center)
+- **Focus Detection**: System detects user focus through facial landmark stability analysis
+  - No clicking required - users simply look at calibration points
+  - Stability threshold: Landmarks remain stable for ~1.5 seconds
+  - Movement tolerance: < 2 pixels deviation in key landmarks
+- **Visual Progress Indicator**:
+  - Calibration dots display expanding progress ring
+  - Ring fills up as focus time accumulates
+  - Visual confirmation when point is captured
+  - Smooth animation provides clear feedback
+- **Auto-advancement**: Automatically proceeds to next calibration point after capture
 - **Duration**: < 20 seconds for full calibration
-- **Feedback**: Visual confirmation at each point
-- **Persistence**: Option to save calibration profile
+- **Persistence**: 
+  - Calibration data saved to localStorage
+  - Profile survives browser sessions
+  - Option to export/import calibration profiles
+- **Console Logging**:
+  - Detailed calibration data output for debugging
+  - Formatted for easy extraction as default values
+  - Includes landmark positions, confidence scores, and timestamps
 - **Recalibration**: Accessible hotkey (Spacebar)
 
 ### Tracking Display
@@ -149,6 +165,38 @@ FaceTracker.on('quickMovement', callback) // { velocity, position, randomKey }
   - Apply calibration offsets for accuracy
   - Smooth gaze position with exponential moving average
 - **Fallback to Head Tracking**: When eye landmarks are not reliable, fall back to head orientation
+
+### Focus-Based Calibration Details
+- **Landmark Stability Detection**:
+  - Monitor key facial landmarks for stability over time
+  - Focus on eye center, nose tip, and mouth corners for reliability
+  - Calculate standard deviation of positions over sliding window
+  - Trigger focus detection when deviation < 2 pixels for 1.5 seconds
+- **Progress Visualization**:
+  - SVG-based progress ring around calibration points
+  - Smooth CSS transitions for filling animation
+  - Color progression: gray → blue → green on completion
+  - Pulse animation on successful capture
+- **Calibration Data Structure**:
+  ```javascript
+  {
+    pointId: number,
+    screenPosition: { x, y },
+    faceLandmarks: { /* normalized landmark positions */ },
+    gazeVector: { x, y },
+    confidence: number,
+    timestamp: Date.now()
+  }
+  ```
+- **localStorage Schema**:
+  - Key: `eyeTracking.calibration.v2`
+  - Data: JSON array of calibration points
+  - Automatic migration from older formats
+- **Console Output Format**:
+  ```javascript
+  console.log('Calibration Complete:', JSON.stringify(calibrationData, null, 2));
+  // Formatted for easy copy-paste as default values
+  ```
 
 ### Head Movement Integration
 - **Velocity Threshold**: 150 pixels/second triggers random keypress events
