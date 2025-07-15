@@ -179,6 +179,7 @@ When making significant changes to the codebase, follow this workflow:
   - If a feature requires more, break into logical sub-commits
   - Each commit should compile and pass basic functionality tests
   - Large refactors should be staged across multiple commits
+- **Always commit changes that are verified to work**
 
 ### Design Patterns Used
 - **Theme System**: Audio uses array structure with single-item arrays for Theme 1 (deterministic)
@@ -204,3 +205,6 @@ When making significant changes to the codebase, follow this workflow:
 - **Performance**: Monitor for audio timing conflicts and animation frame drops
 - **Compatibility**: Verify works with different keyboard layouts (Dvorak, QWERTZ)
 - **Edge Cases**: Test sustained typing sessions and system resource usage
+
+### Development Memories and Best Practices
+- Always update specs if applicable from user prompt
