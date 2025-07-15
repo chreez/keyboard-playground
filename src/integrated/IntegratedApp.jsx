@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import AudioSystem from '../audio/AudioSystem.js';
 import EmojiAnimator from '../animation/EmojiAnimator.js';
-import MockEyeTracker from '../tracking/MockEyeTracker.js';
+import FaceTracker from '../tracking/FaceTracker.js';
 
 const IntegratedApp = () => {
   const canvasRef = useRef(null);
@@ -43,12 +43,12 @@ const IntegratedApp = () => {
     // Initialize eye tracker in background (following startup sequence)
     const initEyeTracker = async () => {
       if (!eyeTrackerRef.current) {
-        eyeTrackerRef.current = new MockEyeTracker();
+        eyeTrackerRef.current = new FaceTracker();
         
         // Set up event listeners
         eyeTrackerRef.current.on('initialized', () => {
           setEyeTrackingStatus(prev => ({ ...prev, initialized: true }));
-          console.log('Eye tracking initialized - ready for Mode 2');
+          console.log('Face tracking initialized - ready for Mode 2');
         });
         
         eyeTrackerRef.current.on('started', () => {
@@ -69,7 +69,7 @@ const IntegratedApp = () => {
           setEyeTrackingStatus(prev => ({ ...prev, calibrating: false }));
         });
         
-        eyeTrackerRef.current.on('gazeUpdate', (data) => {
+        eyeTrackerRef.current.on('attentionUpdate', (data) => {
           setEyeTrackingStatus(prev => ({ ...prev, confidence: data.confidence }));
         });
         
@@ -78,14 +78,35 @@ const IntegratedApp = () => {
           transitionToMode('keyboard');
         });
         
+        // Listen for quick head movements
+        eyeTrackerRef.current.on('quickMovement', (data) => {
+          console.log('Quick head movement detected:', data);
+          
+          // Trigger emoji/sound at the tracked position
+          const { randomKey, position } = data;
+          
+          // Play themed sound
+          if (audioSystemRef.current) {
+            audioSystemRef.current.playThemeSound(randomKey);
+          }
+          
+          // Spawn emoji animation at the tracked position
+          if (animatorRef.current) {
+            animatorRef.current.spawnEmoji(randomKey, position.x, position.y);
+          }
+          
+          // Show brief indicator
+          showModeIndicatorBriefly();
+        });
+        
         try {
           await eyeTrackerRef.current.init({
-            showCrosshair: true,
+            showAttentionZone: true,
             showConfidence: true,
             smoothingLevel: 0.7
           });
         } catch (error) {
-          console.warn('Eye tracking initialization failed, staying in keyboard mode:', error);
+          console.warn('Face tracking initialization failed, staying in keyboard mode:', error);
         }
       }
     };
@@ -101,15 +122,15 @@ const IntegratedApp = () => {
     const handleKeyPress = async (event) => {
       const key = event.key;
       
-      // Handle eye tracking hotkeys
+      // Handle face tracking hotkeys
       if (key === 'Escape') {
         if (eyeTrackerRef.current && eyeTrackerRef.current.isInitialized) {
           if (eyeTrackerRef.current.isTracking) {
             await eyeTrackerRef.current.stop();
-            console.log('Eye tracking stopped - switched to Mode 1');
+            console.log('Face tracking stopped - switched to Mode 1');
           } else {
             await eyeTrackerRef.current.start();
-            console.log('Eye tracking started - switched to Mode 2');
+            console.log('Face tracking started - switched to Mode 2');
           }
         }
         return;
@@ -118,7 +139,7 @@ const IntegratedApp = () => {
       if (key === ' ') {
         if (eyeTrackerRef.current && eyeTrackerRef.current.isInitialized) {
           await eyeTrackerRef.current.startCalibration();
-          console.log('Eye tracking calibration started');
+          console.log('Face tracking calibration started');
         }
         return;
       }
@@ -126,12 +147,12 @@ const IntegratedApp = () => {
       if (key === 'Tab') {
         event.preventDefault();
         if (eyeTrackerRef.current) {
-          eyeTrackerRef.current.showCrosshair = !eyeTrackerRef.current.showCrosshair;
-          if (eyeTrackerRef.current.crosshair) {
-            eyeTrackerRef.current.crosshair.style.display = 
-              eyeTrackerRef.current.showCrosshair ? 'block' : 'none';
+          eyeTrackerRef.current.showAttentionZone = !eyeTrackerRef.current.showAttentionZone;
+          if (eyeTrackerRef.current.attentionZone) {
+            eyeTrackerRef.current.attentionZone.style.display = 
+              eyeTrackerRef.current.showAttentionZone ? 'block' : 'none';
           }
-          console.log('Crosshair toggled:', eyeTrackerRef.current.showCrosshair);
+          console.log('Attention zone toggled:', eyeTrackerRef.current.showAttentionZone);
         }
         return;
       }
@@ -144,7 +165,7 @@ const IntegratedApp = () => {
             tracking: eyeTrackerRef.current.isTracking,
             calibrating: eyeTrackerRef.current.isCalibrating,
             updateRate: eyeTrackerRef.current.getUpdateRate(),
-            gazePosition: eyeTrackerRef.current.getGazePosition(),
+            attentionZone: eyeTrackerRef.current.getAttentionZone(),
             confidence: eyeTrackingStatus.confidence
           };
           console.log('Integration status:', status);
@@ -166,12 +187,12 @@ const IntegratedApp = () => {
             eyeTrackerRef.current.isReadyForTracking() && 
             eyeTrackingStatus.confidence > 0.5) {
           
-          // Mode 2: Eye-controlled spawn with random offset
-          const gazePos = eyeTrackerRef.current.getGazePosition();
-          spawnX = gazePos.x + (Math.random() - 0.5) * 60; // ±30px random offset
-          spawnY = gazePos.y + (Math.random() - 0.5) * 60;
+          // Mode 2: Face-controlled spawn with random offset
+          const attentionZone = eyeTrackerRef.current.getAttentionZone();
+          spawnX = attentionZone.x + (Math.random() - 0.5) * 60; // ±30px random offset
+          spawnY = attentionZone.y + (Math.random() - 0.5) * 60;
           
-          console.log(`Mode 2: Spawning ${mappedKey} at gaze position (${Math.round(spawnX)}, ${Math.round(spawnY)})`);
+          console.log(`Mode 2: Spawning ${mappedKey} at attention zone (${Math.round(spawnX)}, ${Math.round(spawnY)})`);
         } else {
           // Mode 1: Keyboard only (original behavior) - spawn at bottom
           spawnX = undefined; // Let animator use default targeting
@@ -226,18 +247,18 @@ const IntegratedApp = () => {
     console.log(`Transitioning from Mode ${mode === 'keyboard' ? '1' : '2'} to Mode ${newMode === 'keyboard' ? '1' : '2'}`);
     
     if (newMode === 'eye-controlled') {
-      // Fade in crosshair over 500ms
+      // Fade in attention zone over 500ms
       setCrosshairOpacity(1);
-      if (eyeTrackerRef.current && eyeTrackerRef.current.crosshair) {
-        eyeTrackerRef.current.crosshair.style.transition = 'opacity 500ms ease';
-        eyeTrackerRef.current.crosshair.style.opacity = '1';
+      if (eyeTrackerRef.current && eyeTrackerRef.current.attentionZone) {
+        eyeTrackerRef.current.attentionZone.style.transition = 'opacity 500ms ease';
+        eyeTrackerRef.current.attentionZone.style.opacity = '1';
       }
     } else {
-      // Fade out crosshair over 500ms
+      // Fade out attention zone over 500ms
       setCrosshairOpacity(0);
-      if (eyeTrackerRef.current && eyeTrackerRef.current.crosshair) {
-        eyeTrackerRef.current.crosshair.style.transition = 'opacity 500ms ease';
-        eyeTrackerRef.current.crosshair.style.opacity = '0';
+      if (eyeTrackerRef.current && eyeTrackerRef.current.attentionZone) {
+        eyeTrackerRef.current.attentionZone.style.transition = 'opacity 500ms ease';
+        eyeTrackerRef.current.attentionZone.style.opacity = '0';
       }
     }
     
@@ -256,7 +277,7 @@ const IntegratedApp = () => {
 
   const getModeDescription = () => {
     if (mode === 'eye-controlled') {
-      return `Mode 2: Eye-Controlled Spawn (${Math.round(eyeTrackingStatus.confidence * 100)}% confidence)`;
+      return `Mode 2: Face-Controlled Spawn (${Math.round(eyeTrackingStatus.confidence * 100)}% face visibility)`;
     } else {
       return 'Mode 1: Keyboard Only';
     }
@@ -338,9 +359,9 @@ const IntegratedApp = () => {
           textAlign: 'center',
           zIndex: 1000
         }}>
-          <div>🎮 Keyboard Playground + Eye Tracking</div>
+          <div>🎮 Keyboard Playground + Face Tracking</div>
           <div style={{ fontSize: '12px', marginTop: '5px', opacity: '0.7' }}>
-            Press ESC to enable eye tracking • SPACE to calibrate • Type any key to play
+            Press ESC to enable face tracking • SPACE to calibrate • Type any key to play • Quick head movements trigger random sounds
           </div>
         </div>
       )}

@@ -135,6 +135,7 @@ const EyeTrackingApp = () => {
         }
         return;
       }
+      
     };
 
     window.addEventListener('keydown', handleKeyPress);

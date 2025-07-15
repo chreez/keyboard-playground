@@ -4,11 +4,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an experimental Electron application that creates joyful audio-visual feedback through keyboard interaction. The project consists of three main components defined by specification documents:
+This is an experimental Electron application that creates joyful audio-visual feedback through keyboard interaction. The project consists of three separate applications:
 
-1. **Keyboard Playground** - Core Electron app with React UI and audio-visual feedback
-2. **Eye Tracking Module** - Standalone webcam-based gaze tracking using WebGazer.js  
-3. **Integration System** - Rules for combining keyboard and eye tracking modes
+1. **Keyboard Playground** (`npm run dev`) - Core Electron app with React UI and audio-visual feedback
+2. **Face Tracking POC** (`npm run dev:eyetracking`) - Standalone face tracking test app using MediaPipe
+3. **Integrated Experience** (`npm run dev:integrated`) - Combined app that integrates face tracking with emoji playground
+
+## Three-App Architecture
+
+### App 1: Keyboard Playground (Original)
+- **Purpose**: Core emoji/audio playground without face tracking
+- **Command**: `npm run dev`
+- **Port**: 3000
+- **Features**: Keyboard input → emoji animations + themed sounds
+- **Independent**: Works completely standalone
+
+### App 2: Face Tracking POC
+- **Purpose**: Test and debug face tracking functionality
+- **Command**: `npm run dev:eyetracking`
+- **Port**: 3001  
+- **Features**: MediaPipe face tracking, calibration, attention zones
+- **Independent**: Works completely standalone for face tracking development
+
+### App 3: Integrated Experience
+- **Purpose**: Combines keyboard playground with face tracking
+- **Command**: `npm run dev:integrated`
+- **Port**: 3002
+- **Features**: All keyboard playground features + face tracking + head movement detection
+- **Dependencies**: Re-uses code from both other apps via shared modules
+
+## Shared Code Architecture
+
+### Shared Modules
+- **AudioSystem** (`src/audio/`) - Themed sound synthesis
+- **EmojiAnimator** (`src/animation/`) - Canvas-based emoji animations
+- **FaceTracker** (`src/tracking/`) - MediaPipe face tracking implementation
+
+### App-Specific Code
+- **Keyboard Playground**: `src/renderer/` - Pure keyboard interaction
+- **Face Tracking POC**: `src/eye-tracking/` - Face tracking testing interface
+- **Integrated Experience**: `src/integrated/` - Combined experience with head movement detection
 
 ## Architecture
 
@@ -17,7 +52,7 @@ This is an experimental Electron application that creates joyful audio-visual fe
 - **Frontend**: React for UI state management
 - **Animation**: HTML5 Canvas for emoji animations (60+ FPS target)
 - **Audio**: Tone.js for real-time sound synthesis (<50ms latency)
-- **Eye Tracking**: WebGazer.js with ridge regression/neural network models
+- **Face Tracking**: MediaPipe Face Landmarker with 468-point facial landmarks
 
 ### Core Systems
 - **Key Mapping**: Comprehensive character support (A-Z, 0-9, symbols) with themed emoji/sound sets
@@ -28,49 +63,50 @@ This is an experimental Electron application that creates joyful audio-visual fe
 - **Targeting System**: 10% screen padding with 70% center-bias distribution
 - **Audio System**: Theme-based deterministic sounds with synth pooling for rapid keypresses
 - **Dual Mode Operation**: 
-  - Mode 1: Traditional targeting system (current)
-  - Mode 2: Gaze-controlled spawn points with eye tracking (future)
-- **Graceful Degradation**: Full keyboard functionality maintained if eye tracking fails
+  - Mode 1: Traditional targeting system (keyboard-only)
+  - Mode 2: Face-controlled spawn points with attention zones (integrated app)
+- **Graceful Degradation**: Full keyboard functionality maintained if face tracking fails
 
 ## Performance Requirements
 
 - 60 FPS minimum animation framerate
 - <50ms audio latency from keypress to sound
 - <200MB RAM usage
-- <30% CPU usage for eye tracking
-- 30+ Hz eye tracking update rate
-- 100px accuracy target for 80% of gaze fixations
+- <30% CPU usage for face tracking
+- 30+ Hz face tracking update rate
+- 200px attention zone captures user focus 90% of time
 
 ## Key Application Controls
 
 | Key | Function |
 |-----|----------|
 | A-Z | Trigger themed emoji/sound combinations |
-| ESC | Toggle eye tracking on/off |
-| SPACE | Recalibrate eye tracking |
-| TAB | Show/hide gaze crosshair |
-| F1 | Show eye tracking status |
+| ESC | Toggle face tracking on/off (integrated app) |
+| SPACE | Recalibrate face tracking (integrated app) |
+| TAB | Show/hide attention zone (integrated app) |
+| F1 | Show face tracking status (integrated app) |
 | ✕ (top-right) | Exit application |
 
 ## Development Patterns
 
-### Mode Transitions
-- Startup: Launch keyboard mode immediately, initialize eye tracking in background
-- Tracking lost: Smooth 500ms transition to keyboard mode with crosshair fadeout
-- Tracking restored: Requires 2 seconds stable tracking before enabling gaze mode
+### Mode Transitions (Integrated App)
+- Startup: Launch keyboard mode immediately, initialize face tracking in background
+- Tracking lost: Smooth 500ms transition to keyboard mode with attention zone fadeout
+- Tracking restored: Requires 2 seconds stable tracking before enabling face mode
 
-### Eye Tracking Integration
+### Face Tracking Integration
 - All processing local (no video data transmitted)
-- 9-point calibration system (<30 seconds)
-- Confidence indicators: Green (<50px), Yellow (50-100px), Red (>100px)
-- Kalman filter smoothing for jitter reduction
+- 5-point calibration system (<20 seconds)
+- Confidence indicators: Green (>80%), Yellow (50-80%), Red (<50%)
+- Head movement detection triggers random keypresses
+- Fullscreen camera background
 
 ### Performance Optimization Priority
-1. Reduce eye tracking frequency
+1. Reduce face tracking frequency
 2. Disable particle effects  
 3. Simplify emoji physics
 4. Reduce concurrent emoji limit
-5. Disable eye tracking entirely
+5. Disable face tracking entirely
 
 ## Success Criteria
 

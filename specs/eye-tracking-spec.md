@@ -76,6 +76,7 @@ FaceTracker.setTrackingMode(mode: 'precise' | 'comfortable' | 'relaxed')
 FaceTracker.on('calibrationComplete', callback)
 FaceTracker.on('trackingLost', callback)
 FaceTracker.on('attentionUpdate', callback)
+FaceTracker.on('quickMovement', callback) // { velocity, position, randomKey }
 ```
 
 ## Success Criteria
@@ -128,10 +129,18 @@ FaceTracker.on('attentionUpdate', callback)
   - **Comfortable**: Balanced performance and accuracy
   - **Relaxed**: Larger zones, lower CPU usage
 
+### Head Movement Integration
+- **Velocity Threshold**: 150 pixels/second triggers random keypress events
+- **Movement Cooldown**: 1 second between movement events to prevent spam
+- **Random Character Generation**: Letters, numbers, and limited symbols
+- **Emoji Spawning**: Animations appear at tracked attention zone position
+- **Audio Feedback**: Themed sounds play for generated characters
+- **Event Data**: Includes velocity, position, and randomly selected character
+
 ### Implementation Status (v2.0)
 
 ### Current Implementation
-- ✅ **Standalone Application**: Independent face tracking test app
+- ✅ **Standalone Application**: Independent face tracking test app (`npm run dev:eyetracking`)
 - ✅ **Real MediaPipe Integration**: 468-point facial landmark detection
 - ✅ **5-Point Calibration**: Simplified calibration system with persistence
 - ✅ **Fullscreen Camera Background**: Live video feed as backdrop
@@ -141,23 +150,19 @@ FaceTracker.on('attentionUpdate', callback)
 - ✅ **Event System**: Complete event-driven architecture
 - ✅ **Error Handling**: Comprehensive error recovery
 - ✅ **Performance**: 30fps face detection with GPU acceleration
-
-### Mock Face Tracking Features
-- **Mouse Simulation**: Uses cursor position as attention zone center
-- **Zone Simulation**: 200px radius attention area
-- **Confidence Simulation**: Dynamic face visibility values
-- **Calibration Process**: Full 5-point calibration workflow
-- **API Compatibility**: Identical interface to MediaPipe Face Landmarker
+- ✅ **Head Movement Detection**: Velocity-based quick movement detection (integrated app only)
+- ✅ **Emoji Integration**: Random keypress generation on quick head movements (integrated app only)
 
 ### Technical Achievements
-- **Zero Latency**: Instant response using mouse events
+- **Real-time Processing**: 30fps face detection with GPU acceleration
 - **Smooth Transitions**: 500ms fade animations
-- **Resource Efficient**: <2% CPU usage
+- **Resource Efficient**: <30% CPU usage
 - **User Experience**: Intuitive controls and feedback
+- **Fullscreen Camera**: Live video background for immersive experience
 
 ### Limitations
 - **Camera Required**: Real implementation needs webcam access
-- **Library Integration**: MediaPipe Face Landmarker bundler setup needed
+- **Lighting Dependent**: Performance varies with lighting conditions
 - **Accuracy Trade-off**: Less precise than eye tracking but more reliable
 
 ## Version History

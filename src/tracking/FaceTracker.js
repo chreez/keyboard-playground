@@ -53,6 +53,12 @@ class FaceTracker {
     this.calibrationMap = new Map();
     this.currentFaceLandmarks = null;
     
+    // Head movement tracking
+    this.previousPosition = { x: 0, y: 0, timestamp: 0 };
+    this.movementVelocityThreshold = 150; // pixels per second
+    this.movementCooldown = 1000; // milliseconds between movement events
+    this.lastMovementEvent = 0;
+    
     // Bind methods
     this.handleFaceUpdate = this.handleFaceUpdate.bind(this);
     this.handleCalibrationClick = this.handleCalibrationClick.bind(this);
@@ -368,6 +374,9 @@ class FaceTracker {
         timestamp: now
       };
 
+      // Check for quick head movements
+      this.checkHeadMovement(smoothedData.x, smoothedData.y, now);
+
       // Update UI
       this.updateAttentionZone(smoothedData.x, smoothedData.y, smoothedData.radius);
       this.updateConfidenceIndicator(confidence);
@@ -418,6 +427,60 @@ class FaceTracker {
       y: Math.max(radius, Math.min(window.innerHeight - radius, calibratedPosition.y)),
       radius: radius
     };
+  }
+
+  checkHeadMovement(x, y, timestamp) {
+    // Skip if not enough time has passed since initialization
+    if (this.previousPosition.timestamp === 0) {
+      this.previousPosition = { x, y, timestamp };
+      return;
+    }
+
+    // Calculate time delta
+    const timeDelta = timestamp - this.previousPosition.timestamp;
+    if (timeDelta < 50) return; // Skip if too frequent (< 50ms)
+
+    // Calculate distance moved
+    const deltaX = x - this.previousPosition.x;
+    const deltaY = y - this.previousPosition.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Calculate velocity (pixels per second)
+    const velocity = distance / (timeDelta / 1000);
+    
+    // Check if movement is fast enough and cooldown has passed
+    const now = Date.now();
+    if (velocity > this.movementVelocityThreshold && 
+        now - this.lastMovementEvent > this.movementCooldown) {
+      
+      console.log(`Quick head movement detected: ${Math.round(velocity)} px/s`);
+      this.lastMovementEvent = now;
+      
+      // Generate random keypress
+      const randomKey = this.generateRandomKey();
+      this.emit('quickMovement', {
+        velocity: velocity,
+        position: { x, y },
+        randomKey: randomKey
+      });
+    }
+    
+    // Update previous position
+    this.previousPosition = { x, y, timestamp };
+  }
+
+  generateRandomKey() {
+    // Character sets for random selection
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    
+    // Combine all characters with weighted distribution
+    const allChars = letters + numbers + symbols.slice(0, 10); // Limit symbols
+    
+    // Select random character
+    const randomIndex = Math.floor(Math.random() * allChars.length);
+    return allChars[randomIndex];
   }
 
   getCurrentFacePose() {
