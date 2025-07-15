@@ -78,6 +78,14 @@ class ConductorApp {
       this.conductorController.on('themeChanged', (theme) => {
         this.uiController.updateThemeIndicator(theme);
       });
+      
+      this.conductorController.on('handsDetected', (data) => {
+        this.uiController.updateHandTrackingData(data);
+      });
+      
+      this.conductorController.on('handsLost', () => {
+        this.uiController.updateHandTrackingData({ handsDetected: 0 });
+      });
     }
   }
 

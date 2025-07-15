@@ -1,6 +1,11 @@
 // Conductor Controller
 // Main logic for conductor mode - orchestrates hand tracking, gestures, and audio/visual systems
 
+import AudioSystem from '../audio/AudioSystem.js';
+import EmojiAnimator from '../animation/EmojiAnimator.js';
+import HandTracker from '../tracking/HandTracker.js';
+import { GestureRecognizer } from './gestures.js';
+
 export class ConductorController {
   constructor(isDebugMode = false) {
     this.isDebugMode = isDebugMode;
@@ -77,72 +82,96 @@ export class ConductorController {
   }
 
   async initializeCoreSystems() {
-    // For now, create mock systems to get the structure working
-    // Later these will be replaced with actual implementations
-    
     console.log('Initializing core systems...');
     
-    // Mock hand tracker
-    this.handTracker = {
-      isInitialized: false,
-      isTracking: false,
-      async init() {
-        this.isInitialized = true;
-        console.log('Hand tracker initialized (mock)');
-      },
-      async start() {
-        this.isTracking = true;
-        console.log('Hand tracking started (mock)');
-      },
-      async stop() {
-        this.isTracking = false;
-        console.log('Hand tracking stopped (mock)');
-      },
-      getHands() {
-        return []; // Mock empty hands
-      }
-    };
+    // Initialize real hand tracking system
+    this.handTracker = new HandTracker();
+    await this.handTracker.init({
+      maxHands: 2,
+      minDetectionConfidence: this.config.handTracking.confidence,
+      minTrackingConfidence: this.config.handTracking.confidence,
+      showLandmarks: this.isDebugMode, // Show landmarks only in debug mode
+      gestureMode: 'basic'
+    });
     
-    // Mock gesture recognizer
-    this.gestureRecognizer = {
-      recognizeGesture(handData) {
-        return null; // Mock no gesture
-      }
-    };
+    // Set up hand tracking event listeners
+    this.handTracker.on('handsDetected', (hands) => {
+      this.handleHandsDetected(hands);
+    });
     
-    // Mock audio system
-    this.audioSystem = {
-      isInitialized: false,
-      async init() {
-        this.isInitialized = true;
-        console.log('Audio system initialized (mock)');
-      },
-      playNote(note, velocity) {
-        console.log(`Playing note: ${note} with velocity: ${velocity} (mock)`);
-      },
-      setTheme(theme) {
-        console.log(`Audio theme set to: ${theme} (mock)`);
-      }
-    };
+    this.handTracker.on('handsLost', () => {
+      this.handleHandsLost();
+    });
     
-    // Mock emoji animator
-    this.emojiAnimator = {
-      isInitialized: false,
-      async init() {
-        this.isInitialized = true;
-        console.log('Emoji animator initialized (mock)');
-      },
-      spawnEmoji(character, position, animationType) {
-        console.log(`Spawning emoji: ${character} at position: ${position.x},${position.y} with animation: ${animationType} (mock)`);
-      }
-    };
+    // Apply camera blur in production mode
+    if (!this.isDebugMode) {
+      this.applyCameraBlur();
+    }
     
-    // Initialize all systems
-    await this.handTracker.init();
-    await this.audioSystem.init();
-    await this.emojiAnimator.init();
+    // Initialize real gesture recognizer
+    this.gestureRecognizer = new GestureRecognizer({
+      confidenceThreshold: this.config.gestures.confidenceThreshold,
+      cooldownPeriod: this.config.gestures.cooldown,
+      velocityThreshold: this.config.gestures.velocityThreshold
+    });
+    
+    // Initialize real audio system
+    this.audioSystem = new AudioSystem();
+    await this.audioSystem.initialize();
+    
+    // Set default theme
+    this.audioSystem.setTheme(2); // Piano theme
+    
+    // Initialize emoji animator with canvas
+    const canvas = this.createEmojiCanvas();
+    this.emojiAnimator = new EmojiAnimator(canvas);
+    this.emojiAnimator.start();
     
     console.log('Core systems initialized');
+  }
+
+  createEmojiCanvas() {
+    // Create canvas for emoji animations
+    const canvas = document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+    `;
+    document.body.appendChild(canvas);
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    
+    return canvas;
+  }
+
+  handleHandsDetected(hands) {
+    this.handPositions = hands;
+    
+    // Update UI with hand tracking data
+    this.emit('handsDetected', {
+      handsDetected: hands.length,
+      confidence: hands.length > 0 ? hands[0].confidence : 0,
+      activeGestures: this.activeGestures.map(g => g.type)
+    });
+  }
+
+  handleHandsLost() {
+    this.handPositions = [];
+    this.activeGestures = [];
+    
+    // Update UI
+    this.emit('handsLost');
   }
 
   setupEventListeners() {
@@ -180,9 +209,17 @@ export class ConductorController {
     
     this.currentTheme = theme;
     
+    // Map theme names to audio system theme numbers
+    const themeMapping = {
+      'piano': 2,
+      'guitar': 3,
+      'drums': 2, // Use piano for drums (could be extended)
+      'strings': 2 // Use piano for strings (could be extended)
+    };
+    
     // Update audio system
     if (this.audioSystem) {
-      this.audioSystem.setTheme(theme);
+      this.audioSystem.setTheme(themeMapping[theme] || 2);
     }
     
     // Emit theme change event
@@ -281,8 +318,8 @@ export class ConductorController {
   update() {
     // Main update loop
     
-    // Get current hand data
-    const hands = this.handTracker?.getHands() || [];
+    // Get current hand data from our cached positions
+    const hands = this.handPositions || [];
     
     // Process gestures
     this.processGestures(hands);
@@ -295,7 +332,10 @@ export class ConductorController {
   }
 
   processGestures(hands) {
-    if (!hands || hands.length === 0) return;
+    if (!hands || hands.length === 0) {
+      this.activeGestures = [];
+      return;
+    }
     
     const now = performance.now();
     
@@ -305,14 +345,24 @@ export class ConductorController {
     }
     
     // Process gestures for each hand
+    const detectedGestures = [];
     hands.forEach((hand, index) => {
       const gesture = this.gestureRecognizer?.recognizeGesture(hand);
       
       if (gesture && gesture.confidence > this.config.gestures.confidenceThreshold) {
+        detectedGestures.push({
+          ...gesture,
+          hand: hand,
+          handIndex: index,
+          handedness: hand.handedness
+        });
+        
         this.handleGesture(gesture, hand, index);
         this.lastGestureTime = now;
       }
     });
+    
+    this.activeGestures = detectedGestures;
   }
 
   handleGesture(gesture, hand, handIndex) {
@@ -326,15 +376,15 @@ export class ConductorController {
     
     // Trigger audio
     if (this.audioSystem && mapping.sound) {
-      this.audioSystem.playNote(mapping.sound.note, mapping.sound.velocity);
+      this.audioSystem.playThemeSound(mapping.sound.character);
     }
     
     // Trigger visual
     if (this.emojiAnimator && mapping.visual) {
       this.emojiAnimator.spawnEmoji(
         mapping.visual.character,
-        spawnPosition,
-        mapping.visual.animation
+        spawnPosition.x,
+        spawnPosition.y
       );
     }
     
@@ -343,12 +393,23 @@ export class ConductorController {
   }
 
   getSpawnPosition(hand) {
-    // Convert hand position to screen coordinates
-    // This is a mock implementation
-    return {
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight
-    };
+    // Convert hand landmarks to screen coordinates
+    // Use the center of the hand (wrist position) as spawn point
+    if (!hand.landmarks || hand.landmarks.length === 0) {
+      return {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2
+      };
+    }
+    
+    const wrist = hand.landmarks[0]; // WRIST is at index 0
+    
+    // MediaPipe coordinates are normalized (0-1)
+    // Mirror X coordinate to match video display
+    const x = (1 - wrist.x) * window.innerWidth;
+    const y = wrist.y * window.innerHeight;
+    
+    return { x, y };
   }
 
   getGestureMapping(gesture, hand, handIndex) {
@@ -356,74 +417,117 @@ export class ConductorController {
     const mappings = {
       'point': {
         characters: ['1', '2', '3', '4', '5'],
-        soundType: 'lead',
-        animation: 'focused'
+        soundType: 'lead'
       },
       'palm': {
         characters: ['A', 'E', 'I', 'O', 'U'],
-        soundType: 'sustained',
-        animation: 'floating'
+        soundType: 'sustained'
       },
       'fist': {
         characters: ['!', '*', '#', '$', '&'],
-        soundType: 'percussion',
-        animation: 'burst'
+        soundType: 'percussion'
       },
       'peace': {
         characters: ['H', 'J', 'L', 'Y'],
-        soundType: 'major',
-        animation: 'bouncing'
+        soundType: 'major'
       },
       'thumbsUp': {
         characters: ['P', 'W', 'Z'],
-        soundType: 'fanfare',
-        animation: 'spiral'
+        soundType: 'fanfare'
       },
       'pinch': {
         characters: ['*'],
-        soundType: 'arpeggio',
-        animation: 'cascade'
+        soundType: 'arpeggio'
       }
     };
     
     const mapping = mappings[gesture.type];
     if (!mapping) return {};
     
-    const character = mapping.characters[Math.floor(Math.random() * mapping.characters.length)];
+    // Select character based on hand height for pointing, random for others
+    let character;
+    if (gesture.type === 'point') {
+      const handHeight = hand.landmarks[0].y; // Wrist Y position (0 = top, 1 = bottom)
+      const heightIndex = Math.floor((1 - handHeight) * mapping.characters.length);
+      character = mapping.characters[Math.max(0, Math.min(heightIndex, mapping.characters.length - 1))];
+    } else {
+      character = mapping.characters[Math.floor(Math.random() * mapping.characters.length)];
+    }
     
     return {
       visual: {
-        character: character,
-        animation: mapping.animation
+        character: character
       },
       sound: {
-        note: this.calculateNote(hand, handIndex),
-        velocity: this.calculateVelocity(gesture)
+        character: character,
+        velocity: this.calculateVelocity(gesture, hand)
       }
     };
   }
 
-  calculateNote(hand, handIndex) {
-    // Calculate note based on hand position and theme
-    // This is a mock implementation
-    const baseNote = 60; // Middle C
-    const octave = Math.floor(Math.random() * 3);
-    return baseNote + (octave * 12);
-  }
-
-  calculateVelocity(gesture) {
-    // Calculate velocity based on gesture strength
-    return Math.floor(gesture.confidence * 127);
+  calculateVelocity(gesture, hand) {
+    // Calculate velocity based on gesture strength and hand movement
+    let velocity = Math.floor(gesture.confidence * 127);
+    
+    // Adjust velocity based on hand distance from camera (Z coordinate)
+    if (hand.landmarks && hand.landmarks[0]) {
+      const distance = hand.landmarks[0].z || 0;
+      // Closer hands = louder (more negative Z means closer)
+      velocity = Math.max(20, Math.min(127, velocity + (distance * -100)));
+    }
+    
+    return velocity;
   }
 
   updateParameters(hands) {
     // Update left hand parameters (octave, effects, volume)
-    // This is a mock implementation
+    if (!hands || hands.length === 0) return;
+    
+    // Find left hand
+    const leftHand = hands.find(hand => hand.handedness === 'left');
+    if (!leftHand || !leftHand.landmarks) return;
+    
+    const wrist = leftHand.landmarks[0];
+    
+    // Height = Octave mapping (bottom = C2, top = C5)
+    const height = 1 - wrist.y; // Invert Y so top = 1, bottom = 0
+    const octaveRange = this.config.parameters.leftHandOctaveRange;
+    const octave = Math.floor(height * (octaveRange[1] - octaveRange[0])) + octaveRange[0];
+    
+    // Distance = Volume control (near = loud, far = quiet)
+    const distance = Math.abs(wrist.z || 0);
+    const volumeRange = this.config.parameters.volumeDistanceRange;
+    const volume = Math.max(volumeRange[0], Math.min(volumeRange[1], 1 - distance));
+    
+    // Store parameters for use in audio system
+    this.leftHandParameters = {
+      octave: octave,
+      volume: volume,
+      height: height,
+      distance: distance
+    };
+    
+    // Update audio system master volume if available
+    if (this.audioSystem && this.audioSystem.setMasterVolume) {
+      this.audioSystem.setMasterVolume(volume);
+    }
+  }
+
+  applyCameraBlur() {
+    // Apply blur effect to camera video for privacy and aesthetics
+    setTimeout(() => {
+      if (this.handTracker && this.handTracker.videoElement) {
+        const blurRadius = this.config.visuals.cameraBlur;
+        this.handTracker.videoElement.style.filter = `blur(${blurRadius}px)`;
+        console.log(`Applied camera blur: ${blurRadius}px`);
+      }
+    }, 1000); // Wait for video element to be ready
   }
 
   updateVisualEffects(hands) {
     // Update trail effects and other visuals
-    // This is a mock implementation
+    // Trail effects are handled by the HandTracker automatically
+    // Additional visual effects can be added here
   }
 
   recalibrateHandTracking() {
