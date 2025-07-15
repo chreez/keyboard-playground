@@ -14,6 +14,7 @@ const HandTrackingApp = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [showLandmarks, setShowLandmarks] = useState(true);
   const [gestureMode, setGestureMode] = useState('basic');
+  const [trailEnabled, setTrailEnabled] = useState(false);
 
   useEffect(() => {
     const initHandTracker = async () => {
@@ -63,6 +64,11 @@ const HandTrackingApp = () => {
         handTrackerRef.current.on('gestureModeChanged', (mode) => {
           setGestureMode(mode);
           console.log('Gesture mode changed to:', mode);
+        });
+
+        handTrackerRef.current.on('trailToggled', (enabled) => {
+          setTrailEnabled(enabled);
+          console.log('Trail effect toggled:', enabled);
         });
         
         try {
@@ -138,6 +144,15 @@ const HandTrackingApp = () => {
         console.log('Gesture mode toggled to:', handTrackerRef.current?.gestureMode);
         return;
       }
+      
+      if (key === 't' || key === 'T') {
+        if (handTrackerRef.current) {
+          handTrackerRef.current.toggleTrail();
+          setTrailEnabled(handTrackerRef.current.trailEnabled);
+        }
+        console.log('Trail effect toggled to:', handTrackerRef.current?.trailEnabled);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyPress);
@@ -179,6 +194,13 @@ const HandTrackingApp = () => {
     if (handTrackerRef.current) {
       handTrackerRef.current.toggleGestureMode();
       setGestureMode(handTrackerRef.current.gestureMode);
+    }
+  };
+
+  const handleToggleTrail = () => {
+    if (handTrackerRef.current) {
+      handTrackerRef.current.toggleTrail();
+      setTrailEnabled(handTrackerRef.current.trailEnabled);
     }
   };
 
@@ -252,6 +274,7 @@ const HandTrackingApp = () => {
               <li><kbd>F1</kbd> - Show status</li>
               <li><kbd>H</kbd> - Toggle help</li>
               <li><kbd>G</kbd> - Toggle gesture mode</li>
+              <li><kbd>T</kbd> - Toggle trail effect</li>
             </ul>
             <p><strong>Note:</strong> Tracking starts automatically when initialized</p>
             <p><strong>Gestures:</strong></p>
@@ -298,6 +321,11 @@ const HandTrackingApp = () => {
           <div>
             <span style={{ color: '#4CAF50' }}>
               ● Mode: {gestureMode}
+            </span>
+          </div>
+          <div>
+            <span style={{ color: trailEnabled ? '#4CAF50' : '#f44336' }}>
+              ● Trail: {trailEnabled ? 'On' : 'Off'}
             </span>
           </div>
         </div>
@@ -474,6 +502,21 @@ const HandTrackingApp = () => {
           }}
         >
           Mode: {gestureMode}
+        </button>
+        
+        <button
+          onClick={handleToggleTrail}
+          disabled={!status.initialized}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: status.initialized ? (trailEnabled ? '#2196F3' : '#666') : '#666',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: status.initialized ? 'pointer' : 'not-allowed'
+          }}
+        >
+          Trail: {trailEnabled ? 'On' : 'Off'}
         </button>
       </div>
 

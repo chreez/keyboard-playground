@@ -55,6 +55,21 @@ class HandTracker {
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
     };
+
+    // Trail effect configuration
+    this.trailEnabled = false;
+    this.trailConfig = {
+      maxLength: 15,
+      fadeDuration: 600, // ms
+      particleSize: 8,
+      color: '#A7FF83',
+      style: 'circles', // 'circles', 'emojis', 'sparkles'
+      velocityMultiplier: 1.5
+    };
+    
+    // Trail state
+    this.trailHistory = new Map(); // Map of hand ID to trail positions
+    this.lastTrailUpdate = 0;
     
     // Hand landmark indices
     this.LANDMARKS = {
@@ -403,6 +418,11 @@ class HandTracker {
       
       // Update gesture recognition
       this.updateGestureRecognition();
+      
+      // Update trail effect
+      if (this.trailEnabled) {
+        this.updateTrailHistory();
+      }
       
       // Update UI
       this.updateUI();
@@ -834,9 +854,97 @@ class HandTracker {
     this.emit('gestureModeChanged', this.gestureMode);
   }
 
+  toggleTrail() {
+    this.trailEnabled = !this.trailEnabled;
+    if (!this.trailEnabled) {
+      this.clearTrail();
+    }
+    console.log('Trail effect toggled:', this.trailEnabled);
+    this.emit('trailToggled', this.trailEnabled);
+  }
+
+  setTrailConfig(config) {
+    this.trailConfig = { ...this.trailConfig, ...config };
+    console.log('Trail config updated:', this.trailConfig);
+  }
+
+  getTrailConfig() {
+    return { ...this.trailConfig };
+  }
+
+  clearTrail() {
+    this.trailHistory.clear();
+    console.log('Trail history cleared');
+  }
+
   updateUI() {
     this.drawHandLandmarks();
     this.updateGestureIndicator();
+  }
+
+  updateTrailHistory() {
+    const now = performance.now();
+    
+    // Update trail for each hand
+    for (const hand of this.currentHands) {
+      const handId = hand.handedness; // Use handedness as ID
+      const handCenter = this.getHandCenter(hand.landmarks);
+      
+      // Calculate velocity for trail effects
+      let velocity = 0;
+      if (this.trailHistory.has(handId)) {
+        const history = this.trailHistory.get(handId);
+        if (history.length > 0) {
+          const lastPos = history[history.length - 1];
+          const deltaTime = now - lastPos.timestamp;
+          const deltaX = handCenter.x - lastPos.x;
+          const deltaY = handCenter.y - lastPos.y;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          velocity = deltaTime > 0 ? distance / deltaTime : 0;
+        }
+      }
+      
+      // Add current position to trail
+      const trailPoint = {
+        x: handCenter.x,
+        y: handCenter.y,
+        timestamp: now,
+        velocity: velocity
+      };
+      
+      if (!this.trailHistory.has(handId)) {
+        this.trailHistory.set(handId, []);
+      }
+      
+      const trail = this.trailHistory.get(handId);
+      trail.push(trailPoint);
+      
+      // Remove old trail points beyond max length
+      if (trail.length > this.trailConfig.maxLength) {
+        trail.shift();
+      }
+      
+      // Remove trail points older than fade duration
+      const maxAge = this.trailConfig.fadeDuration;
+      while (trail.length > 0 && (now - trail[0].timestamp) > maxAge) {
+        trail.shift();
+      }
+    }
+    
+    // Remove trails for hands that are no longer detected
+    const activeHandIds = new Set(this.currentHands.map(h => h.handedness));
+    for (const handId of this.trailHistory.keys()) {
+      if (!activeHandIds.has(handId)) {
+        // Keep fading trail for a short time even after hand disappears
+        const trail = this.trailHistory.get(handId);
+        if (trail.length > 0) {
+          const oldestTimestamp = trail[0].timestamp;
+          if (now - oldestTimestamp > this.trailConfig.fadeDuration) {
+            this.trailHistory.delete(handId);
+          }
+        }
+      }
+    }
   }
 
   drawHandLandmarks() {
@@ -848,13 +956,122 @@ class HandTracker {
     // Always clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Only draw if landmarks are enabled
+    // Draw trail effects first (behind landmarks)
+    if (this.trailEnabled) {
+      this.drawTrailEffects(ctx);
+    }
+    
+    // Only draw landmarks if enabled
     if (this.showLandmarks) {
       // Draw each hand
       for (const hand of this.currentHands) {
         this.drawHand(ctx, hand);
       }
     }
+  }
+
+  drawTrailEffects(ctx) {
+    const now = performance.now();
+    
+    // Draw trail for each hand
+    for (const [handId, trail] of this.trailHistory) {
+      if (trail.length < 2) continue; // Need at least 2 points for trail
+      
+      const handColor = handId === 'left' ? '#ff6b6b' : '#4ecdc4';
+      const trailColor = this.trailConfig.color;
+      
+      // Draw trail particles
+      for (let i = 0; i < trail.length; i++) {
+        const point = trail[i];
+        const age = now - point.timestamp;
+        const maxAge = this.trailConfig.fadeDuration;
+        
+        // Calculate opacity based on age (newer = more opaque)
+        const opacity = Math.max(0, 1 - (age / maxAge));
+        if (opacity <= 0) continue;
+        
+        // Calculate size based on velocity and age
+        const velocityMultiplier = 1 + (point.velocity * this.trailConfig.velocityMultiplier * 0.001);
+        const baseSize = this.trailConfig.particleSize;
+        const size = baseSize * velocityMultiplier * opacity;
+        
+        // Draw particle based on style
+        ctx.globalAlpha = opacity;
+        
+        switch (this.trailConfig.style) {
+          case 'circles':
+            this.drawCircleParticle(ctx, point.x, point.y, size, trailColor);
+            break;
+          case 'emojis':
+            this.drawEmojiParticle(ctx, point.x, point.y, size, handId);
+            break;
+          case 'sparkles':
+            this.drawSparkleParticle(ctx, point.x, point.y, size, trailColor);
+            break;
+          default:
+            this.drawCircleParticle(ctx, point.x, point.y, size, trailColor);
+        }
+      }
+      
+      // Reset global alpha
+      ctx.globalAlpha = 1.0;
+    }
+  }
+
+  drawCircleParticle(ctx, x, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Add subtle glow effect
+    ctx.shadowBlur = size;
+    ctx.shadowColor = color;
+    ctx.beginPath();
+    ctx.arc(x, y, size / 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  drawEmojiParticle(ctx, x, y, size, handId) {
+    const emoji = handId === 'left' ? '✨' : '🌟';
+    ctx.font = `${size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, x, y);
+  }
+
+  drawSparkleParticle(ctx, x, y, size, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size / 4;
+    ctx.lineCap = 'round';
+    
+    // Draw sparkle as crossing lines
+    const half = size / 2;
+    
+    // Horizontal line
+    ctx.beginPath();
+    ctx.moveTo(x - half, y);
+    ctx.lineTo(x + half, y);
+    ctx.stroke();
+    
+    // Vertical line
+    ctx.beginPath();
+    ctx.moveTo(x, y - half);
+    ctx.lineTo(x, y + half);
+    ctx.stroke();
+    
+    // Diagonal lines
+    const diag = half * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x - diag, y - diag);
+    ctx.lineTo(x + diag, y + diag);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(x - diag, y + diag);
+    ctx.lineTo(x + diag, y - diag);
+    ctx.stroke();
   }
 
   drawHand(ctx, hand) {
