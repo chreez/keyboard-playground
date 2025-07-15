@@ -52,6 +52,28 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 - **Tracking Confidence**: Color-coded feedback for tracking quality
 - **Debug Mode**: Detailed visualization for development and testing
 
+## Visual Effects
+
+### Hand Trail Effect
+- **Purpose**: Create a visually appealing trail that follows hand movement
+- **Behavior**: Stores last 15-20 hand positions and renders them with decreasing opacity
+- **Trail Characteristics**:
+  - Particle type: Small circles or emoji particles
+  - Color: Matches current app theme (#A7FF83 for default green)
+  - Fade duration: 500-800ms
+  - Maximum trail length: 15 positions
+  - Update frequency: Every frame (30+ Hz)
+- **Performance**: Trail rendering should add <5% CPU overhead
+- **Configuration Options**:
+  - Trail enabled/disabled
+  - Trail length (5-20 positions)
+  - Trail style (circles, emojis, sparkles)
+  - Trail color/theme
+- **Gesture Integration**: 
+  - Fast movements create longer, more visible trails
+  - Slow movements create subtle, shorter trails
+  - Pinch gesture could spawn particle burst
+
 ## Technical Requirements
 
 ### Core Technology
@@ -132,6 +154,12 @@ HandTracker.getFingerPositions(hand): Array<{x, y}>
 HandTracker.handleResize(): void // Called automatically on window resize
 HandTracker.updateCanvasSize(): void // Updates overlay canvas dimensions
 HandTracker.getScreenDimensions(): {width, height} // Current screen size
+
+// Trail effect methods
+HandTracker.toggleTrail(): void // Toggle trail effect on/off
+HandTracker.setTrailConfig(config): void // Configure trail settings
+HandTracker.getTrailConfig(): object // Get current trail configuration
+HandTracker.clearTrail(): void // Clear current trail history
 ```
 
 ## Integration Points
@@ -182,6 +210,10 @@ HandTracker.getScreenDimensions(): {width, height} // Current screen size
 - [ ] Seamless window resize handling without tracking interruption
 - [ ] Canvas and coordinates update correctly on screen size changes
 - [ ] No visual glitches during resize operations
+- [ ] Hand trail effect adds <5% CPU overhead
+- [ ] Trail particles fade smoothly over 500-800ms
+- [ ] Trail responds to hand movement velocity
+- [ ] Trail effects are visually appealing and not distracting
 
 ## Development Considerations
 - **Browser Compatibility**: Test across all major browsers
