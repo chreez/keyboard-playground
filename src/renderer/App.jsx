@@ -16,8 +16,21 @@ const App = () => {
       canvas.height = window.innerHeight;
     };
 
+    const handleKeyPress = (event) => {
+      const key = event.key.toUpperCase();
+      if (key >= 'A' && key <= 'Z') {
+        console.log(`Key pressed: ${key}`);
+        // TODO: Trigger emoji and sound for this key
+      }
+    };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('keydown', handleKeyPress);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyPress);
+    };
   }, []);
 
   const handleClose = () => {
