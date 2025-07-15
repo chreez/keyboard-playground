@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conductor Mode - Hand Gesture Music</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            color: white;
+            overflow: hidden;
+        }
+        
+        /* Prevent text selection */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Ensure full screen */
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Welcome screen styling */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-instructions {
+            font-size: 1.2rem;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        /* Main interface elements */
+        .conductor-interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .theme-indicator {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+        }
+
+        .active-gesture {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .exit-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .exit-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .gesture-hints {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .hint-text {
+            font-size: 1rem;
+            margin: 5px 0;
+        }
+
+        /* Debug mode overlay */
+        .debug-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .debug-overlay.active {
+            display: block;
+        }
+
+        .debug-header {
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .debug-section {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .debug-title {
+            color: #4ecdc4;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .debug-value {
+            font-family: monospace;
+            color: #a7ff83;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Fade animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="welcome-screen">
+        <div class="welcome-title">🎵 Conductor Mode 🎵</div>
+        <div class="welcome-subtitle">Use your hands to make music!</div>
+        <div class="welcome-instructions">👋 Wave to begin • ESC to exit</div>
+    </div>
+
+    <!-- Main Conductor Interface -->
+    <div id="conductor-interface" class="conductor-interface hidden">
+        <div class="top-bar">
+            <div id="theme-indicator" class="theme-indicator">🎹 Piano</div>
+            <div id="active-gesture" class="active-gesture hidden">👋 Wave</div>
+            <button id="exit-button" class="exit-button">✕</button>
+        </div>
+
+        <div id="gesture-hints" class="gesture-hints">
+            <div class="hint-text">✋ Open hand for sustained notes</div>
+            <div class="hint-text">👉 Point to play melodies</div>
+            <div class="hint-text">✊ Make a fist for drums</div>
+        </div>
+    </div>
+
+    <!-- Debug Mode Overlay -->
+    <div id="debug-overlay" class="debug-overlay">
+        <div class="debug-header">🔧 Debug Mode Active</div>
+        
+        <div class="debug-section">
+            <div class="debug-title">Performance</div>
+            <div id="debug-fps" class="debug-value">FPS: --</div>
+            <div id="debug-cpu" class="debug-value">CPU: --</div>
+            <div id="debug-memory" class="debug-value">Memory: --</div>
+        </div>
+
+        <div class="debug-section">
+            <div class="debug-title">Hand Tracking</div>
+            <div id="debug-hands" class="debug-value">Hands Detected: 0</div>
+            <div id="debug-confidence" class="debug-value">Confidence: --</div>
+            <div id="debug-gestures" class="debug-value">Active Gestures: --</div>
+        </div>
+
+        <div class="debug-section">
+            <div class="debug-title">Audio System</div>
+            <div id="debug-audio" class="debug-value">Audio Context: --</div>
+            <div id="debug-notes" class="debug-value">Active Notes: --</div>
+        </div>
+    </div>
+
+    <script type="module" src="./index.js"></script>
+</body>
+</html>

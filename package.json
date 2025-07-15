@@ -23,7 +23,13 @@
     "dev:handtracking": "concurrently \"npm run dev:handtracking:renderer\" \"npm run dev:handtracking:electron\"",
     "dev:handtracking:renderer": "parcel src/hand-tracking/index.html --port 3003",
     "dev:handtracking:electron": "wait-on http://localhost:3003 && electron src/main-handtracking.js --dev",
-    "build:handtracking": "parcel build src/hand-tracking/index.html --dist-dir dist/hand-tracking --public-url ./"
+    "build:handtracking": "parcel build src/hand-tracking/index.html --dist-dir dist/hand-tracking --public-url ./",
+    "start:conductor": "npm run build:conductor && electron src/main-conductor.js",
+    "dev:conductor": "concurrently \"npm run dev:conductor:renderer\" \"npm run dev:conductor:electron\"",
+    "dev:conductor:renderer": "parcel src/conductor/index.html --port 3004",
+    "dev:conductor:electron": "wait-on http://localhost:3004 && electron src/main-conductor.js --dev",
+    "build:conductor": "parcel build src/conductor/index.html --dist-dir dist/conductor --public-url ./",
+    "conductor": "NODE_ENV=production npm run start:conductor"
   },
   "keywords": [
     "electron",
