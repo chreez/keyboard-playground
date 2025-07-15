@@ -371,6 +371,7 @@ class FaceTracker {
         y: smoothedData.y,
         radius: smoothedData.radius,
         confidence: confidence,
+        gazeConfidence: smoothedData.gazeConfidence || 0,
         timestamp: now
       };
 
@@ -403,17 +404,36 @@ class FaceTracker {
       return { x: window.innerWidth / 2, y: window.innerHeight / 2, radius: 200 };
     }
 
-    // Apply calibration mapping if available
-    const calibratedPosition = this.applyCalibratedMapping(facePose);
+    // Calculate eye gaze
+    const eyeGaze = this.calculateEyeGaze(landmarks);
+    
+    // Combine head pose and eye gaze for attention zone
+    let attentionPosition;
+    
+    if (eyeGaze.confidence > 0.7) {
+      // Use eye gaze when confident
+      const gazeX = facePose.eyeCenter.x * window.innerWidth + eyeGaze.gazeVector.x * 300;
+      const gazeY = facePose.eyeCenter.y * window.innerHeight + eyeGaze.gazeVector.y * 300;
+      
+      // Apply calibration to gaze position
+      const gazeData = {
+        ...facePose,
+        faceCenter: { x: gazeX / window.innerWidth, y: gazeY / window.innerHeight }
+      };
+      attentionPosition = this.applyCalibratedMapping(gazeData);
+    } else {
+      // Fallback to head pose when eye tracking is not confident
+      attentionPosition = this.applyCalibratedMapping(facePose);
+    }
     
     // Set radius based on tracking mode
     let radius;
     switch (this.trackingMode) {
       case 'precise':
-        radius = 150;
+        radius = eyeGaze.confidence > 0.7 ? 120 : 150;
         break;
       case 'comfortable':
-        radius = 200;
+        radius = eyeGaze.confidence > 0.7 ? 180 : 200;
         break;
       case 'relaxed':
         radius = 250;
@@ -421,11 +441,17 @@ class FaceTracker {
       default:
         radius = 200;
     }
+    
+    // Adjust radius based on gaze confidence
+    if (eyeGaze.confidence < 0.7) {
+      radius *= 1.2; // Increase radius when using head tracking
+    }
 
     return {
-      x: Math.max(radius, Math.min(window.innerWidth - radius, calibratedPosition.x)),
-      y: Math.max(radius, Math.min(window.innerHeight - radius, calibratedPosition.y)),
-      radius: radius
+      x: Math.max(radius, Math.min(window.innerWidth - radius, attentionPosition.x)),
+      y: Math.max(radius, Math.min(window.innerHeight - radius, attentionPosition.y)),
+      radius: radius,
+      gazeConfidence: eyeGaze.confidence
     };
   }
 
@@ -602,6 +628,75 @@ class FaceTracker {
     return {
       x: (headDirection.x / magnitude) * 2,
       y: (headDirection.y / magnitude) * 2
+    };
+  }
+
+  calculateEyeGaze(landmarks) {
+    // MediaPipe eye landmarks for gaze estimation
+    // Left eye landmarks
+    const leftEyeOuter = landmarks[33];
+    const leftEyeInner = landmarks[133];
+    const leftEyeTop = landmarks[159];
+    const leftEyeBottom = landmarks[145];
+    const leftPupilEstimate = landmarks[468]; // Left iris center if available
+    
+    // Right eye landmarks  
+    const rightEyeOuter = landmarks[362];
+    const rightEyeInner = landmarks[263];
+    const rightEyeTop = landmarks[386];
+    const rightEyeBottom = landmarks[374];
+    const rightPupilEstimate = landmarks[473]; // Right iris center if available
+
+    // Calculate eye centers
+    const leftEyeCenter = {
+      x: (leftEyeOuter.x + leftEyeInner.x) / 2,
+      y: (leftEyeTop.y + leftEyeBottom.y) / 2
+    };
+
+    const rightEyeCenter = {
+      x: (rightEyeOuter.x + rightEyeInner.x) / 2,
+      y: (rightEyeTop.y + rightEyeBottom.y) / 2
+    };
+
+    // Calculate gaze direction from iris position if available
+    let gazeVector = { x: 0, y: 0 };
+    
+    if (leftPupilEstimate && rightPupilEstimate) {
+      // Use iris positions for more accurate gaze
+      const leftGaze = {
+        x: (leftPupilEstimate.x - leftEyeCenter.x) * 4,
+        y: (leftPupilEstimate.y - leftEyeCenter.y) * 4
+      };
+      
+      const rightGaze = {
+        x: (rightPupilEstimate.x - rightEyeCenter.x) * 4,
+        y: (rightPupilEstimate.y - rightEyeCenter.y) * 4
+      };
+      
+      // Average both eyes
+      gazeVector = {
+        x: (leftGaze.x + rightGaze.x) / 2,
+        y: (leftGaze.y + rightGaze.y) / 2
+      };
+    } else {
+      // Fallback: estimate gaze from eye shape and position
+      const eyeWidth = Math.abs(leftEyeInner.x - leftEyeOuter.x);
+      const eyeHeight = Math.abs(leftEyeTop.y - leftEyeBottom.y);
+      const eyeAspectRatio = eyeHeight / eyeWidth;
+      
+      // Use eye aspect ratio and position to estimate gaze
+      // This is less accurate but provides a fallback
+      gazeVector = {
+        x: 0, // Default to center when iris not detected
+        y: eyeAspectRatio < 0.2 ? 0.5 : 0 // Looking down if eyes narrowed
+      };
+    }
+
+    return {
+      leftEyeCenter,
+      rightEyeCenter,
+      gazeVector,
+      confidence: leftPupilEstimate && rightPupilEstimate ? 0.9 : 0.5
     };
   }
 

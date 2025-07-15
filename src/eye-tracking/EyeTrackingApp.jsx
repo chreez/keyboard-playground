@@ -10,7 +10,7 @@ const EyeTrackingApp = () => {
     calibrating: false,
     error: null
   });
-  const [attentionData, setAttentionData] = useState({ x: 0, y: 0, radius: 200, confidence: 0 });
+  const [attentionData, setAttentionData] = useState({ x: 0, y: 0, radius: 200, confidence: 0, gazeConfidence: 0 });
   const [showInstructions, setShowInstructions] = useState(true);
 
   useEffect(() => {
@@ -308,6 +308,16 @@ const EyeTrackingApp = () => {
               Face Visibility: 
               <span style={{ color: getConfidenceColor(attentionData.confidence), marginLeft: '5px' }}>
                 {getConfidenceText(attentionData.confidence)} ({Math.round(attentionData.confidence * 100)}%)
+              </span>
+            </div>
+            <div>
+              Tracking Mode: 
+              <span style={{ 
+                color: attentionData.gazeConfidence > 0.7 ? '#00ff00' : '#ffff00', 
+                marginLeft: '5px' 
+              }}>
+                {attentionData.gazeConfidence > 0.7 ? 'Eye Gaze' : 'Head Pose'} 
+                ({Math.round(attentionData.gazeConfidence * 100)}% confidence)
               </span>
             </div>
           </div>
