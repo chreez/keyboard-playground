@@ -757,8 +757,8 @@ class HandTracker {
   }
 
   showUI() {
-    if (this.handOverlay && this.showLandmarks) {
-      this.handOverlay.style.display = 'block';
+    if (this.handOverlay) {
+      this.handOverlay.style.display = this.showLandmarks ? 'block' : 'none';
     }
     if (this.gestureIndicator) {
       this.gestureIndicator.style.display = 'block';
@@ -774,23 +774,33 @@ class HandTracker {
     }
   }
 
+  toggleLandmarks() {
+    this.showLandmarks = !this.showLandmarks;
+    if (this.handOverlay) {
+      this.handOverlay.style.display = this.showLandmarks ? 'block' : 'none';
+    }
+  }
+
   updateUI() {
     this.drawHandLandmarks();
     this.updateGestureIndicator();
   }
 
   drawHandLandmarks() {
-    if (!this.handOverlay || !this.showLandmarks) return;
+    if (!this.handOverlay) return;
 
     const canvas = this.handOverlay;
     const ctx = canvas.getContext('2d');
     
-    // Clear canvas
+    // Always clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw each hand
-    for (const hand of this.currentHands) {
-      this.drawHand(ctx, hand);
+    // Only draw if landmarks are enabled
+    if (this.showLandmarks) {
+      // Draw each hand
+      for (const hand of this.currentHands) {
+        this.drawHand(ctx, hand);
+      }
     }
   }
 

@@ -93,11 +93,11 @@ const HandTrackingApp = () => {
       
       if (key === 'Tab') {
         event.preventDefault();
-        setShowLandmarks(!showLandmarks);
         if (handTrackerRef.current) {
-          handTrackerRef.current.showLandmarks = !showLandmarks;
+          handTrackerRef.current.toggleLandmarks();
+          setShowLandmarks(handTrackerRef.current.showLandmarks);
         }
-        console.log('Landmarks toggled:', !showLandmarks);
+        console.log('Landmarks toggled:', handTrackerRef.current?.showLandmarks);
         return;
       }
       
@@ -142,7 +142,7 @@ const HandTrackingApp = () => {
         handTrackerRef.current.dispose();
       }
     };
-  }, [showLandmarks, gestureMode]);
+  }, [gestureMode]);
 
   const handleClose = () => {
     window.close();
@@ -161,9 +161,9 @@ const HandTrackingApp = () => {
   };
 
   const handleToggleLandmarks = () => {
-    setShowLandmarks(!showLandmarks);
     if (handTrackerRef.current) {
-      handTrackerRef.current.showLandmarks = !showLandmarks;
+      handTrackerRef.current.toggleLandmarks();
+      setShowLandmarks(handTrackerRef.current.showLandmarks);
     }
   };
 
