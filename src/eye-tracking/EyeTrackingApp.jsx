@@ -188,7 +188,7 @@ const EyeTrackingApp = () => {
     <div style={{ 
       width: '100vw', 
       height: '100vh', 
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'transparent',
       position: 'relative',
       color: 'white',
       fontFamily: 'Arial, sans-serif'

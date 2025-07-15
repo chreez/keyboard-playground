@@ -136,7 +136,7 @@ class FaceTracker {
           height: 100vh;
           object-fit: cover;
           transform: scaleX(-1);
-          z-index: -1;
+          z-index: 0;
           display: block;
         `;
         this.videoElement.srcObject = stream;
@@ -746,7 +746,7 @@ class FaceTracker {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.5);
       pointer-events: none;
       z-index: 9999;
       display: none;

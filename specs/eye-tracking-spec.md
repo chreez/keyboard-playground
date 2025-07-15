@@ -19,8 +19,13 @@ A standalone module that provides real-time attention tracking using standard we
 - **Recalibration**: Accessible hotkey (Spacebar)
 
 ### Tracking Display
-- **Fullscreen Camera Background**: Live video feed as background instead of PiP
-- **Attention Zone**: Circular area showing user's focus region
+- **Fullscreen Camera Background**: Live video feed fills entire screen as background
+  - Video element must be visible (not hidden behind solid backgrounds)
+  - Mirrored display for natural interaction
+  - Proper z-index layering (video at back, UI elements on top)
+- **Attention Zone**: Circular area showing user's gaze focus point
+  - Follows eye gaze when available, falls back to head orientation
+  - Semi-transparent overlay for visibility
 - **Confidence Indicator**: Visual feedback for tracking quality
   - Green: High confidence (face clearly visible, >80% landmarks)
   - Yellow: Medium confidence (face partially visible, 50-80% landmarks)
@@ -128,6 +133,22 @@ FaceTracker.on('quickMovement', callback) // { velocity, position, randomKey }
   - **Precise**: Smaller zones, higher CPU usage
   - **Comfortable**: Balanced performance and accuracy
   - **Relaxed**: Larger zones, lower CPU usage
+
+### Eye/Gaze Tracking Implementation
+- **Eye Landmark Detection**: MediaPipe provides specific eye landmarks:
+  - Left eye: landmarks 33, 133, 157, 158, 159, 160, 161, 163, 173, 246
+  - Right eye: landmarks 362, 398, 384, 385, 386, 387, 388, 390, 466, 263
+  - Iris centers: landmarks 468-477 (left and right iris)
+- **Gaze Direction Calculation**:
+  - Extract eye corner positions for eye shape
+  - Use iris center positions relative to eye boundaries
+  - Calculate normalized gaze vector from iris displacement
+  - Project gaze vector onto screen plane
+- **Screen Mapping**:
+  - Map normalized gaze coordinates to screen dimensions
+  - Apply calibration offsets for accuracy
+  - Smooth gaze position with exponential moving average
+- **Fallback to Head Tracking**: When eye landmarks are not reliable, fall back to head orientation
 
 ### Head Movement Integration
 - **Velocity Threshold**: 150 pixels/second triggers random keypress events
