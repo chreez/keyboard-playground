@@ -26,7 +26,7 @@ class HandTracker {
     this.currentGestures = [];
     this.smoothingBuffer = [];
     this.smoothingLevel = 0.7;
-    this.showLandmarks = true;
+    this.showLandmarks = false; // Debug feature - off by default
     this.gestureMode = 'basic'; // 'basic', 'advanced'
     
     // MediaPipe components
@@ -57,7 +57,7 @@ class HandTracker {
     };
 
     // Trail effect configuration
-    this.trailEnabled = false;
+    this.trailEnabled = true; // On by default for better visual feedback
     this.trailConfig = {
       maxLength: 15,
       fadeDuration: 600, // ms
@@ -878,7 +878,7 @@ class HandTracker {
   }
 
   updateUI() {
-    this.drawHandLandmarks();
+    this.drawOverlay();
     this.updateGestureIndicator();
   }
 
@@ -947,7 +947,7 @@ class HandTracker {
     }
   }
 
-  drawHandLandmarks() {
+  drawOverlay() {
     if (!this.handOverlay) return;
 
     const canvas = this.handOverlay;
@@ -956,17 +956,21 @@ class HandTracker {
     // Always clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw trail effects first (behind landmarks)
+    // Draw trail effects first (behind landmarks) - independent of landmark visibility
     if (this.trailEnabled) {
       this.drawTrailEffects(ctx);
     }
     
-    // Only draw landmarks if enabled
+    // Draw landmarks only if enabled
     if (this.showLandmarks) {
-      // Draw each hand
-      for (const hand of this.currentHands) {
-        this.drawHand(ctx, hand);
-      }
+      this.drawHandLandmarks(ctx);
+    }
+  }
+
+  drawHandLandmarks(ctx) {
+    // Draw each hand
+    for (const hand of this.currentHands) {
+      this.drawHand(ctx, hand);
     }
   }
 

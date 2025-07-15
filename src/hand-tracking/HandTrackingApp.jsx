@@ -12,9 +12,9 @@ const HandTrackingApp = () => {
   const [handData, setHandData] = useState([]);
   const [gestureData, setGestureData] = useState([]);
   const [showInstructions, setShowInstructions] = useState(true);
-  const [showLandmarks, setShowLandmarks] = useState(true);
+  const [showLandmarks, setShowLandmarks] = useState(false); // Debug feature - off by default
   const [gestureMode, setGestureMode] = useState('basic');
-  const [trailEnabled, setTrailEnabled] = useState(false);
+  const [trailEnabled, setTrailEnabled] = useState(true); // On by default for better visual feedback
 
   useEffect(() => {
     const initHandTracker = async () => {
@@ -76,7 +76,7 @@ const HandTrackingApp = () => {
             maxHands: 2,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5,
-            showLandmarks: showLandmarks,
+            showLandmarks: false, // Debug feature - off by default
             gestureMode: 'basic' // Always start in basic mode
           });
           console.log('HandTracker initialized successfully');

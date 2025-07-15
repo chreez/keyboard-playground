@@ -47,7 +47,8 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 - **Custom Gestures**: Extensible system for adding new gesture patterns
 
 ### Visual Feedback
-- **Landmark Visualization**: Optional overlay showing hand skeleton
+- **Hand Trail Effects**: Primary visual feedback showing hand movement (enabled by default)
+- **Landmark Visualization**: Optional debug overlay showing hand skeleton (disabled by default)
 - **Gesture Indicators**: Visual confirmation of recognized gestures
 - **Tracking Confidence**: Color-coded feedback for tracking quality
 - **Debug Mode**: Detailed visualization for development and testing
@@ -55,7 +56,8 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
 ## Visual Effects
 
 ### Hand Trail Effect
-- **Purpose**: Create a visually appealing trail that follows hand movement
+- **Purpose**: Primary visual feedback showing hand movement (enabled by default)
+- **Independence**: Trail rendering is independent of landmark debugging features
 - **Behavior**: Stores last 15-20 hand positions and renders them with decreasing opacity
 - **Trail Characteristics**:
   - Particle type: Small circles or emoji particles
@@ -65,7 +67,7 @@ A real-time hand tracking and gesture recognition module using MediaPipe Hand La
   - Update frequency: Every frame (30+ Hz)
 - **Performance**: Trail rendering should add <5% CPU overhead
 - **Configuration Options**:
-  - Trail enabled/disabled
+  - Trail enabled/disabled (enabled by default)
   - Trail length (5-20 positions)
   - Trail style (circles, emojis, sparkles)
   - Trail color/theme
@@ -114,7 +116,7 @@ HandTracker.init(options: {
   maxHands: number,          // 1 or 2
   minDetectionConfidence: number, // 0-1
   minTrackingConfidence: number,  // 0-1
-  showLandmarks: boolean,
+  showLandmarks: boolean,    // Debug feature - false by default
   gestureMode: 'basic' | 'advanced'
 })
 
@@ -214,6 +216,8 @@ HandTracker.clearTrail(): void // Clear current trail history
 - [ ] Trail particles fade smoothly over 500-800ms
 - [ ] Trail responds to hand movement velocity
 - [ ] Trail effects are visually appealing and not distracting
+- [ ] Trail effects work independently of landmark debugging features
+- [ ] Trail enabled by default provides immediate visual feedback
 
 ## Development Considerations
 - **Browser Compatibility**: Test across all major browsers
