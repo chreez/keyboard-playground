@@ -25,6 +25,12 @@ class MoodDetector {
       Object.assign(scores, musicalScores);
     }
 
+    // Add guitar mood analysis for Theme 3
+    if (beatAnalysis.theme === 3) {
+      const guitarScores = this.analyzeGuitarMood(beatAnalysis, trendAnalysis);
+      Object.assign(scores, guitarScores);
+    }
+
     // Find the mood with the highest score
     const newMood = this.selectDominantMood(scores);
     
@@ -55,11 +61,19 @@ class MoodDetector {
     // Few burst patterns suggest calm
     if (analysis.burstPatterns.length === 0) score += 0.2;
     
+    // Octave-based mood modifiers
+    if (analysis.currentOctave) {
+      // Lower octaves (2-3) suggest calm, deeper tones
+      if (analysis.currentOctave <= 3) score += 0.2;
+      // Very high octaves (5-6) can be jarring, not calm
+      if (analysis.currentOctave >= 5) score -= 0.1;
+    }
+    
     // Trend analysis
     if (trend && trend.trend === 'decreasing') score += 0.1;
     if (trend && trend.stability > 0.7) score += 0.1;
     
-    return Math.min(1, score);
+    return Math.max(0, Math.min(1, score));
   }
 
   calculateEnergeticScore(analysis, trend) {
@@ -78,10 +92,18 @@ class MoodDetector {
     // Moderate burst patterns
     if (analysis.burstPatterns.length > 0 && analysis.burstPatterns.length < 3) score += 0.2;
     
+    // Octave-based mood modifiers
+    if (analysis.currentOctave) {
+      // Mid-range octaves (3-4) suggest balanced energy
+      if (analysis.currentOctave >= 3 && analysis.currentOctave <= 4) score += 0.15;
+      // High octaves (5) can add brightness/energy
+      if (analysis.currentOctave === 5) score += 0.1;
+    }
+    
     // Trend analysis
     if (trend && trend.trend === 'increasing') score += 0.1;
     
-    return Math.min(1, score);
+    return Math.max(0, Math.min(1, score));
   }
 
   calculatePlayfulScore(analysis, trend) {
@@ -103,7 +125,15 @@ class MoodDetector {
     // Varied key usage (if available)
     if (analysis.keyCount > 5) score += 0.1;
     
-    return Math.min(1, score);
+    // Octave-based mood modifiers
+    if (analysis.currentOctave) {
+      // Higher octaves (4-5) suggest playful, bright tones
+      if (analysis.currentOctave >= 4 && analysis.currentOctave <= 5) score += 0.15;
+      // Very high octaves (6) can sound playful/whimsical
+      if (analysis.currentOctave === 6) score += 0.1;
+    }
+    
+    return Math.max(0, Math.min(1, score));
   }
 
   calculateIntenseScore(analysis, trend) {
@@ -188,6 +218,85 @@ class MoodDetector {
       scores.excited += 0.2;
     } else if (musicalAnalysis.pitchRange < 12) { // Narrow range
       scores.serene += 0.2;
+    }
+    
+    return scores;
+  }
+
+  analyzeGuitarMood(analysis, trend) {
+    const scores = {
+      'guitar-clean': 0,
+      'guitar-warm': 0,
+      'guitar-driven': 0,
+      'guitar-heavy': 0
+    };
+    
+    // Tempo-based guitar mood analysis
+    if (analysis.tempo < 60) {
+      scores['guitar-clean'] += 0.4;
+      scores['guitar-warm'] += 0.2;
+    } else if (analysis.tempo < 100) {
+      scores['guitar-warm'] += 0.4;
+      scores['guitar-clean'] += 0.2;
+    } else if (analysis.tempo < 160) {
+      scores['guitar-driven'] += 0.4;
+      scores['guitar-warm'] += 0.1;
+    } else {
+      scores['guitar-heavy'] += 0.4;
+      scores['guitar-driven'] += 0.2;
+    }
+    
+    // Intensity-based analysis
+    if (analysis.intensity < 3) {
+      scores['guitar-clean'] += 0.3;
+    } else if (analysis.intensity < 6) {
+      scores['guitar-warm'] += 0.3;
+    } else if (analysis.intensity < 8) {
+      scores['guitar-driven'] += 0.3;
+    } else {
+      scores['guitar-heavy'] += 0.3;
+    }
+    
+    // Octave-based analysis for guitar tones
+    if (analysis.currentOctave) {
+      if (analysis.currentOctave <= 2) {
+        // Low octaves = heavier, driven sound
+        scores['guitar-heavy'] += 0.2;
+        scores['guitar-driven'] += 0.1;
+      } else if (analysis.currentOctave <= 3) {
+        // Mid-low octaves = warm, driven
+        scores['guitar-warm'] += 0.2;
+        scores['guitar-driven'] += 0.1;
+      } else if (analysis.currentOctave <= 4) {
+        // Mid octaves = balanced
+        scores['guitar-warm'] += 0.1;
+        scores['guitar-driven'] += 0.1;
+      } else {
+        // High octaves = clean, bright
+        scores['guitar-clean'] += 0.2;
+        scores['guitar-warm'] += 0.1;
+      }
+    }
+    
+    // Burst pattern analysis
+    if (analysis.burstPatterns.length > 3) {
+      scores['guitar-heavy'] += 0.2;
+    } else if (analysis.burstPatterns.length > 1) {
+      scores['guitar-driven'] += 0.2;
+    } else if (analysis.burstPatterns.length === 1) {
+      scores['guitar-warm'] += 0.1;
+    } else {
+      scores['guitar-clean'] += 0.1;
+    }
+    
+    // Variance analysis for guitar expressiveness
+    if (analysis.rhythmVariance > 0.6) {
+      scores['guitar-heavy'] += 0.15;
+    } else if (analysis.rhythmVariance > 0.3) {
+      scores['guitar-driven'] += 0.15;
+    } else {
+      scores['guitar-clean'] += 0.1;
+      scores['guitar-warm'] += 0.1;
     }
     
     return scores;

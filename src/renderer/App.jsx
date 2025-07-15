@@ -5,6 +5,7 @@ import EmojiAnimator from '../animation/EmojiAnimator.js';
 import BeatAnalyzer from '../analysis/BeatAnalyzer.js';
 import MoodDetector from '../analysis/MoodDetector.js';
 import BackgroundVisualizer from '../visualization/BackgroundVisualizer.js';
+import BackgroundMusicManager from '../audio/BackgroundMusicManager.js';
 
 const App = () => {
   const canvasRef = useRef(null);
@@ -15,6 +16,7 @@ const App = () => {
   const beatAnalyzerRef = useRef(null);
   const moodDetectorRef = useRef(null);
   const backgroundVisualizerRef = useRef(null);
+  const backgroundMusicRef = useRef(null);
   const heldKeysRef = useRef(new Set()); // Track held keys for sustained notes
 
   useEffect(() => {
@@ -56,6 +58,12 @@ const App = () => {
     if (!backgroundVisualizerRef.current) {
       backgroundVisualizerRef.current = new BackgroundVisualizer(backgroundCanvas, container);
       backgroundVisualizerRef.current.start();
+    }
+
+    // Initialize background music manager
+    if (!backgroundMusicRef.current) {
+      backgroundMusicRef.current = new BackgroundMusicManager();
+      backgroundMusicRef.current.initialize();
     }
 
     const handleResize = () => {
@@ -104,12 +112,28 @@ const App = () => {
           beatAnalyzerRef.current.recordKeyPress(mappedKey);
         }
         
-        // Update mood based on beat analysis
-        if (beatAnalyzerRef.current && moodDetectorRef.current && backgroundVisualizerRef.current) {
+        // Update mood based on beat analysis and octave information
+        if (beatAnalyzerRef.current && moodDetectorRef.current && backgroundVisualizerRef.current && audioSystemRef.current) {
           const beatAnalysis = beatAnalyzerRef.current.getCurrentAnalysis();
           const trendAnalysis = beatAnalyzerRef.current.getTrendAnalysis();
-          const mood = moodDetectorRef.current.analyzeMood(beatAnalysis, trendAnalysis);
-          backgroundVisualizerRef.current.updateMood(mood, beatAnalysis);
+          const octave = audioSystemRef.current.getKeyOctave(mappedKey);
+          const currentTheme = audioSystemRef.current.getCurrentTheme();
+          
+          // Add octave and theme information to beat analysis for mood processing
+          const enhancedAnalysis = {
+            ...beatAnalysis,
+            currentOctave: octave,
+            octaveRange: { min: 2, max: 6 }, // From our keyboard mapping
+            theme: currentTheme
+          };
+          
+          const mood = moodDetectorRef.current.analyzeMood(enhancedAnalysis, trendAnalysis);
+          backgroundVisualizerRef.current.updateMood(mood, enhancedAnalysis);
+          
+          // Update background music mood
+          if (backgroundMusicRef.current) {
+            backgroundMusicRef.current.setMood(mood);
+          }
         }
       }
     };
@@ -156,6 +180,11 @@ const App = () => {
         backgroundVisualizerRef.current.dispose();
       }
       
+      // Cleanup background music
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.dispose();
+      }
+      
       // Cleanup analysis systems
       if (beatAnalyzerRef.current) {
         beatAnalyzerRef.current.reset();
@@ -169,6 +198,25 @@ const App = () => {
 
   const handleClose = () => {
     window.close();
+  };
+
+  const handleThemeSwitch = (themeNumber) => {
+    if (audioSystemRef.current) {
+      audioSystemRef.current.setTheme(themeNumber);
+    }
+    if (backgroundMusicRef.current) {
+      backgroundMusicRef.current.setTheme(themeNumber);
+    }
+  };
+
+  const handleBackgroundMusicToggle = () => {
+    if (backgroundMusicRef.current) {
+      if (backgroundMusicRef.current.isBackgroundMusicPlaying()) {
+        backgroundMusicRef.current.stop();
+      } else {
+        backgroundMusicRef.current.start();
+      }
+    }
   };
 
   return (
@@ -204,6 +252,62 @@ const App = () => {
           zIndex: 2
         }}
       />
+
+      {/* Theme switching buttons */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '20px',
+        display: 'flex',
+        gap: '10px',
+        zIndex: 1000
+      }}>
+        <button
+          onClick={() => handleThemeSwitch(2)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            color: 'white',
+            fontSize: '12px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Piano
+        </button>
+        <button
+          onClick={() => handleThemeSwitch(3)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            color: 'white',
+            fontSize: '12px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Guitar
+        </button>
+        <button
+          onClick={handleBackgroundMusicToggle}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            color: 'white',
+            fontSize: '12px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          🎵 Music
+        </button>
+      </div>
 
       {/* Close button */}
       <button

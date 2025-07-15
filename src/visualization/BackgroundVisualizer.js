@@ -85,6 +85,27 @@ class BackgroundVisualizer {
         primary: { r: 0, g: 15, b: 15 },
         secondary: { r: 5, g: 30, b: 30 },
         accent: { r: 10, g: 45, b: 45 }
+      },
+      // Guitar theme moods
+      'guitar-clean': {
+        primary: { r: 10, g: 15, b: 25 },
+        secondary: { r: 20, g: 30, b: 45 },
+        accent: { r: 30, g: 45, b: 65 }
+      },
+      'guitar-warm': {
+        primary: { r: 25, g: 15, b: 5 },
+        secondary: { r: 45, g: 30, b: 15 },
+        accent: { r: 65, g: 45, b: 25 }
+      },
+      'guitar-driven': {
+        primary: { r: 30, g: 10, b: 0 },
+        secondary: { r: 55, g: 25, b: 10 },
+        accent: { r: 80, g: 40, b: 20 }
+      },
+      'guitar-heavy': {
+        primary: { r: 35, g: 5, b: 5 },
+        secondary: { r: 60, g: 15, b: 15 },
+        accent: { r: 85, g: 25, b: 25 }
       }
     };
   }
@@ -124,14 +145,76 @@ class BackgroundVisualizer {
     this.lastMoodChange = Date.now();
     this.moodTransitionProgress = 0;
     
-    // Update target colors
-    this.targetColors = this.backgroundColors[mood] || this.backgroundColors.neutral;
+    // Update target colors with octave-based modifications
+    this.targetColors = this.getOctaveModifiedColors(mood, beatAnalysis);
     
     // Update particle behavior based on mood
     this.updateParticleSystemForMood(mood, beatAnalysis);
     
     // Update CSS background if needed
     this.updateCSSBackground(mood);
+  }
+
+  getOctaveModifiedColors(mood, beatAnalysis) {
+    const baseColors = this.backgroundColors[mood] || this.backgroundColors.neutral;
+    
+    // If no octave information, return base colors
+    if (!beatAnalysis || !beatAnalysis.currentOctave) {
+      return baseColors;
+    }
+    
+    // Create modified colors based on octave
+    const octave = beatAnalysis.currentOctave;
+    const modifiedColors = JSON.parse(JSON.stringify(baseColors)); // Deep copy
+    
+    // Octave-based color temperature adjustments
+    if (octave <= 2) {
+      // Very low octaves - darker, warmer colors
+      modifiedColors.primary.r = Math.min(255, modifiedColors.primary.r + 5);
+      modifiedColors.primary.g = Math.max(0, modifiedColors.primary.g - 3);
+      modifiedColors.primary.b = Math.max(0, modifiedColors.primary.b - 5);
+    } else if (octave === 3) {
+      // Low octaves - slightly warmer
+      modifiedColors.primary.r = Math.min(255, modifiedColors.primary.r + 3);
+      modifiedColors.primary.g = Math.max(0, modifiedColors.primary.g - 1);
+      modifiedColors.primary.b = Math.max(0, modifiedColors.primary.b - 2);
+    } else if (octave === 4) {
+      // Mid octaves - neutral (no change)
+      // Keep base colors unchanged
+    } else if (octave === 5) {
+      // High octaves - brighter, cooler colors
+      modifiedColors.primary.r = Math.max(0, modifiedColors.primary.r - 2);
+      modifiedColors.primary.g = Math.min(255, modifiedColors.primary.g + 3);
+      modifiedColors.primary.b = Math.min(255, modifiedColors.primary.b + 8);
+    } else if (octave >= 6) {
+      // Very high octaves - bright, cool colors
+      modifiedColors.primary.r = Math.max(0, modifiedColors.primary.r - 5);
+      modifiedColors.primary.g = Math.min(255, modifiedColors.primary.g + 5);
+      modifiedColors.primary.b = Math.min(255, modifiedColors.primary.b + 15);
+    }
+    
+    // Apply similar modifications to secondary and accent colors
+    ['secondary', 'accent'].forEach(type => {
+      if (octave <= 2) {
+        modifiedColors[type].r = Math.min(255, modifiedColors[type].r + 8);
+        modifiedColors[type].g = Math.max(0, modifiedColors[type].g - 3);
+        modifiedColors[type].b = Math.max(0, modifiedColors[type].b - 8);
+      } else if (octave === 3) {
+        modifiedColors[type].r = Math.min(255, modifiedColors[type].r + 5);
+        modifiedColors[type].g = Math.max(0, modifiedColors[type].g - 1);
+        modifiedColors[type].b = Math.max(0, modifiedColors[type].b - 3);
+      } else if (octave === 5) {
+        modifiedColors[type].r = Math.max(0, modifiedColors[type].r - 3);
+        modifiedColors[type].g = Math.min(255, modifiedColors[type].g + 5);
+        modifiedColors[type].b = Math.min(255, modifiedColors[type].b + 12);
+      } else if (octave >= 6) {
+        modifiedColors[type].r = Math.max(0, modifiedColors[type].r - 8);
+        modifiedColors[type].g = Math.min(255, modifiedColors[type].g + 8);
+        modifiedColors[type].b = Math.min(255, modifiedColors[type].b + 20);
+      }
+    });
+    
+    return modifiedColors;
   }
 
   updateParticleSystemForMood(mood, beatAnalysis) {
@@ -147,7 +230,12 @@ class BackgroundVisualizer {
       bright: { count: 12, speed: 0.8, size: 1.2, type: 'sparkle' },
       melancholic: { count: 6, speed: 0.3, size: 0.8, type: 'drift' },
       excited: { count: 25, speed: 2.2, size: 2, type: 'explosion' },
-      serene: { count: 5, speed: 0.1, size: 0.5, type: 'flow' }
+      serene: { count: 5, speed: 0.1, size: 0.5, type: 'flow' },
+      // Guitar theme moods
+      'guitar-clean': { count: 10, speed: 0.4, size: 1.1, type: 'float' },
+      'guitar-warm': { count: 15, speed: 0.8, size: 1.5, type: 'drift' },
+      'guitar-driven': { count: 25, speed: 1.8, size: 2.2, type: 'pulse' },
+      'guitar-heavy': { count: 35, speed: 2.5, size: 2.8, type: 'chaos' }
     };
     
     const config = moodConfigs[mood] || moodConfigs.calm;

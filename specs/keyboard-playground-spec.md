@@ -54,6 +54,7 @@ Each printable character is assigned themed audio-visual feedback:
 - **Latency**: < 50ms from keypress to sound
 - **Polyphony**: Multiple simultaneous sounds supported
 - **Sound Selection**: Theme-based deterministic system with extensible architecture
+- **Background Music**: Ambient theme music with volume controls and theme synchronization
 
 #### Theme System Architecture
 - **Theme 1 (Current)**: Single deterministic sound per character
@@ -70,6 +71,13 @@ Each printable character is assigned themed audio-visual feedback:
     - Common symbols use higher octave metallic tones (C6-C7 range)
   - **Synth Type**: Bright, crystalline 'pluck' synth with moderate sustain
   - **Musical Characteristics**: Playful yet pleasant, encourages melodic exploration
+- **Theme 3 (Guitar Synth)**: Electric guitar simulation with effects chain
+  - **Letters (A-Z)**: Lead guitar tones with distortion and chorus
+  - **Numbers (0-9)**: Rhythm guitar sounds with chunky midrange
+  - **Symbols**: Percussive guitar effects for accents
+  - **Effects Chain**: Distortion → Chorus → Delay → Reverb → Volume
+  - **Synth Type**: MonoSynth with sawtooth waves for electric guitar authenticity
+  - **Musical Characteristics**: Rock/electric guitar feel from clean to heavy distortion
 - **Future Themes**: Array structure designed for variations
   - Multi-item arrays enable sound variations within same character theme
   - Maintains deterministic behavior through theme-specific selection logic
@@ -78,6 +86,31 @@ Each printable character is assigned themed audio-visual feedback:
   - Format: `{ synth: 'type', note: 'pitch', duration: 'length' }`
   - Synth types: 'pluck', 'membrane', 'metal', 'synth'
   - Supports complex themes with multiple layered sounds per keypress
+
+#### Background Music System
+- **Purpose**: Ambient music loops that enhance the typing experience without interfering
+- **Theme Integration**: Background music changes to match current theme (piano/guitar)
+- **Volume Control**: Independent volume control for background music vs keyboard sounds
+- **Mood Responsiveness**: Music adapts to detected mood (calm, energetic, etc.)
+- **Loop System**: Seamless looping ambient tracks with smooth transitions
+
+**Theme-Specific Background Music**:
+- **Theme 2 (Piano)**: Classical ambient piano loops with gentle harmonies
+  - Calm mood: Soft, meditative piano arpeggios
+  - Energetic mood: More dynamic classical piano patterns
+  - Playful mood: Light, bouncy piano melodies
+- **Theme 3 (Guitar)**: Ambient guitar soundscapes with atmospheric effects
+  - Clean mood: Gentle fingerpicked acoustic guitar
+  - Warm mood: Mellow electric guitar with chorus
+  - Driven mood: Mid-tempo rock rhythm guitar
+  - Heavy mood: Atmospheric distorted guitar drones
+
+**Technical Implementation**:
+- **Transport**: Tone.js Transport for synchronized playback
+- **Scheduling**: Pattern-based sequencing for looping
+- **Effects**: Separate effects chain for background music
+- **Mixing**: Proper level balancing to avoid masking keyboard sounds
+- **Performance**: Lightweight patterns that don't impact typing latency
 
 ## Technical Architecture
 
