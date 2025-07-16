@@ -108,6 +108,9 @@ export class ConductorController {
       this.applyCameraBlur();
     }
     
+    // Configure trail effects for conductor mode
+    this.configureTrailEffects();
+    
     // Initialize real gesture recognizer
     this.gestureRecognizer = new GestureRecognizer({
       confidenceThreshold: this.config.gestures.confidenceThreshold,
@@ -359,6 +362,9 @@ export class ConductorController {
         
         this.handleGesture(gesture, hand, index);
         this.lastGestureTime = now;
+        
+        // Trigger cooldown visualization
+        this.triggerGestureCooldown();
       }
     });
     
@@ -374,9 +380,15 @@ export class ConductorController {
     // Map gesture to character and sound
     const mapping = this.getGestureMapping(gesture, hand, handIndex);
     
-    // Trigger audio
+    // Trigger audio - use sustained notes for palm gestures
     if (this.audioSystem && mapping.sound) {
-      this.audioSystem.playThemeSound(mapping.sound.character);
+      if (gesture.type === 'palm') {
+        // Palm gestures trigger sustained notes
+        this.audioSystem.startSustainedNote(mapping.sound.character);
+      } else {
+        // Other gestures trigger regular notes
+        this.audioSystem.playThemeSound(mapping.sound.character);
+      }
     }
     
     // Trigger visual
@@ -524,6 +536,50 @@ export class ConductorController {
     }, 1000); // Wait for video element to be ready
   }
 
+  configureTrailEffects() {
+    // Configure trail effects for conductor mode with gradient colors
+    if (this.handTracker) {
+      const themeColors = this.getThemeColors();
+      
+      this.handTracker.trailConfig = {
+        ...this.handTracker.trailConfig,
+        style: 'gradient',
+        color: themeColors.primary,
+        gradientColors: themeColors.gradient,
+        maxLength: this.config.visuals.trailLength,
+        fadeDuration: 800, // Longer fade for more elegant effect
+        particleSize: 12, // Larger particles for better visibility
+        velocityMultiplier: 2.0 // More responsive to movement
+      };
+      
+      console.log('Trail effects configured for conductor mode');
+    }
+  }
+
+  getThemeColors() {
+    // Get gradient colors based on current theme
+    const themeColorMap = {
+      'piano': {
+        primary: '#667eea',
+        gradient: ['#667eea', '#764ba2', '#f093fb']
+      },
+      'guitar': {
+        primary: '#f093fb',
+        gradient: ['#f093fb', '#f5576c', '#ffeaa7']
+      },
+      'drums': {
+        primary: '#ff6b6b',
+        gradient: ['#ff6b6b', '#ee5a24', '#feca57']
+      },
+      'strings': {
+        primary: '#4ecdc4',
+        gradient: ['#4ecdc4', '#44a08d', '#096dd9']
+      }
+    };
+    
+    return themeColorMap[this.currentTheme] || themeColorMap['piano'];
+  }
+
   updateVisualEffects(hands) {
     // Update trail effects and other visuals
     // Trail effects are handled by the HandTracker automatically
@@ -533,6 +589,32 @@ export class ConductorController {
   recalibrateHandTracking() {
     console.log('Recalibrating hand tracking...');
     // This would reinitialize the hand tracking system
+  }
+
+  handleKeyboardFallback(key) {
+    // Keyboard fallback for accessibility when hand tracking fails
+    console.log(`Keyboard fallback: ${key}`);
+    
+    // Trigger audio and visual feedback for typed keys
+    if (this.audioSystem) {
+      this.audioSystem.playThemeSound(key);
+    }
+    
+    // Spawn emoji at center of screen
+    if (this.emojiAnimator) {
+      this.emojiAnimator.spawnEmoji(
+        key,
+        window.innerWidth / 2,
+        window.innerHeight / 2
+      );
+    }
+  }
+
+  triggerGestureCooldown() {
+    // Emit cooldown event for UI visualization
+    this.emit('gestureCooldown', {
+      duration: this.gestureCooldown
+    });
   }
 
   // Event system

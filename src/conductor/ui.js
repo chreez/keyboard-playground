@@ -14,11 +14,18 @@ export class UIController {
       welcomeScreen: null,
       conductorInterface: null,
       debugOverlay: null,
+      gestureHelp: null,
       themeIndicator: null,
       activeGesture: null,
       gestureHints: null,
-      exitButton: null
+      exitButton: null,
+      gestureSuccess: null,
+      gestureCooldown: null,
+      cooldownProgress: null
     };
+    
+    // UI state
+    this.helpVisible = false;
     
     // Debug data
     this.debugData = {
@@ -69,10 +76,14 @@ export class UIController {
     this.elements.welcomeScreen = document.getElementById('welcome-screen');
     this.elements.conductorInterface = document.getElementById('conductor-interface');
     this.elements.debugOverlay = document.getElementById('debug-overlay');
+    this.elements.gestureHelp = document.getElementById('gesture-help');
     this.elements.themeIndicator = document.getElementById('theme-indicator');
     this.elements.activeGesture = document.getElementById('active-gesture');
     this.elements.gestureHints = document.getElementById('gesture-hints');
     this.elements.exitButton = document.getElementById('exit-button');
+    this.elements.gestureSuccess = document.getElementById('gesture-success');
+    this.elements.gestureCooldown = document.getElementById('gesture-cooldown');
+    this.elements.cooldownProgress = document.getElementById('cooldown-progress');
   }
 
   setupInitialState() {
@@ -119,10 +130,58 @@ export class UIController {
     this.elements.activeGesture.textContent = gestureMap[gesture.type] || gesture.type;
     this.elements.activeGesture.classList.remove('hidden');
     
+    // Show success feedback
+    this.showGestureSuccess(gesture);
+    
     // Hide after 1 second
     setTimeout(() => {
       this.elements.activeGesture.classList.add('hidden');
     }, 1000);
+  }
+
+  showGestureSuccess(gesture) {
+    if (!this.elements.gestureSuccess) return;
+    
+    const successMessages = {
+      'point': '🎯 Perfect Point!',
+      'palm': '✋ Great Palm!',
+      'fist': '✊ Strong Fist!',
+      'peace': '✌️ Peace!',
+      'thumbsUp': '👍 Awesome!',
+      'pinch': '🤏 Nice Pinch!'
+    };
+    
+    this.elements.gestureSuccess.textContent = successMessages[gesture.type] || '✨ Great!';
+    this.elements.gestureSuccess.classList.add('show');
+    
+    // Hide after animation
+    setTimeout(() => {
+      this.elements.gestureSuccess.classList.remove('show');
+    }, 1200);
+  }
+
+  showGestureCooldown(duration = 200) {
+    if (!this.elements.gestureCooldown || !this.elements.cooldownProgress) return;
+    
+    this.elements.gestureCooldown.classList.add('active');
+    this.elements.cooldownProgress.style.width = '100%';
+    
+    // Animate cooldown progress
+    const startTime = performance.now();
+    const animateCooldown = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.max(0, 1 - (elapsed / duration));
+      
+      this.elements.cooldownProgress.style.width = `${progress * 100}%`;
+      
+      if (progress > 0) {
+        requestAnimationFrame(animateCooldown);
+      } else {
+        this.elements.gestureCooldown.classList.remove('active');
+      }
+    };
+    
+    requestAnimationFrame(animateCooldown);
   }
 
   toggleGestureHints() {
@@ -132,6 +191,20 @@ export class UIController {
     this.elements.gestureHints.style.opacity = this.hintsVisible ? '0.7' : '0';
     
     console.log(`Gesture hints ${this.hintsVisible ? 'shown' : 'hidden'}`);
+  }
+
+  toggleGestureHelp() {
+    if (!this.elements.gestureHelp) return;
+    
+    this.helpVisible = !this.helpVisible;
+    
+    if (this.helpVisible) {
+      this.elements.gestureHelp.classList.remove('hidden');
+    } else {
+      this.elements.gestureHelp.classList.add('hidden');
+    }
+    
+    console.log(`Gesture help ${this.helpVisible ? 'shown' : 'hidden'}`);
   }
 
   toggleMinimalMode() {

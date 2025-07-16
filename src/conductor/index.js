@@ -86,6 +86,10 @@ class ConductorApp {
       this.conductorController.on('handsLost', () => {
         this.uiController.updateHandTrackingData({ handsDetected: 0 });
       });
+      
+      this.conductorController.on('gestureCooldown', (data) => {
+        this.uiController.showGestureCooldown(data.duration);
+      });
     }
   }
 
@@ -97,7 +101,7 @@ class ConductorApp {
         this.handleExit();
         break;
       case 'h':
-        this.uiController.toggleGestureHints();
+        this.uiController.toggleGestureHelp();
         break;
       case 'm':
         this.uiController.toggleMinimalMode();
@@ -138,6 +142,26 @@ class ConductorApp {
         if (this.isDebugMode) {
           event.preventDefault();
           this.conductorController.recalibrateHandTracking();
+        }
+        break;
+      case '1':
+        this.conductorController.setTheme('piano');
+        break;
+      case '2':
+        this.conductorController.setTheme('guitar');
+        break;
+      case '3':
+        this.conductorController.setTheme('drums');
+        break;
+      case '4':
+        this.conductorController.setTheme('strings');
+        break;
+      
+      // Keyboard fallback for accessibility
+      default:
+        // Let other keys trigger sounds through the keyboard fallback
+        if (this.conductorController && this.conductorController.handleKeyboardFallback) {
+          this.conductorController.handleKeyboardFallback(key);
         }
         break;
     }
