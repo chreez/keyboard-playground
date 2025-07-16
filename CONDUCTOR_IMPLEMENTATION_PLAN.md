@@ -1,227 +1,273 @@
-# Musical Conductor Educational Edition - Implementation Plan
+# Musical Conductor Educational Edition - Implementation Plan v2.1
 
 ## Overview
-This document provides a detailed implementation plan for completing the Musical Conductor Educational Edition game as specified in `specs/conductor-game.md`. The plan is designed for Claude Sonnet agents to implement in sequential phases.
+This document provides a detailed implementation plan for completing the Musical Conductor Educational Edition game with the new interactive object-based sound system as specified in `specs/conductor-game.md` v2.1.0. The plan is designed for AI agents to implement the transformation from piano keyboard to touchable 3D objects.
+
+## Major Changes in v2.1
+- **Interactive Objects**: Replace traditional piano with floating 3D objects
+- **Collision Detection**: Sound only triggers when hands touch objects
+- **Boundary Detection**: No sound when hands are out of frame
+- **Visual Feedback**: Objects glow and emit particles when touched
 
 ## Current State Analysis
 
 ### Existing Foundation (✅ Complete)
 - Electron application with hand tracking via MediaPipe
 - Basic gesture recognition (6 gesture types)
-- Audio system with theme switching
+- Audio system with themes
 - Visual effects and emoji animations
 - UI with welcome screen and production/debug modes
-
-### Missing Core Features (❌ To Implement)
 - Music theory engine for educational content
-- Hand-to-note mapping for piano control
-- AI teacher integration
-- Visual learning system
-- Discovery and progression tracking
+- Hand-to-note mapping system
+- AI teacher integration with Web Worker
+- Educational visual system with theory display
+- Discovery and progress tracking system
+
+### New Requirements (❌ To Implement)
+- Interactive object system with 3D positioning
+- Collision detection between hands and objects
+- Hand boundary detection (silence when out of frame)
+- Object placement engine with musical arrangements
+- Enhanced visual feedback for object interactions
+- Touch-based sound triggering (not position-based)
 
 ## Implementation Phases
 
-### Phase 1: Core Musical Foundation (High Priority)
+### Phase 1: Object System Foundation (High Priority)
 
-#### Task 1.1: Music Theory Engine
-**Files to create/modify:**
-- `src/conductor-mode/musicTheoryEngine.js`
-- `src/conductor-mode/musicalConstants.js`
+#### Task 1.1: Interactive Object System
+**Files to create:**
+- `src/conductor-mode/objects/interactiveObject.js`
+- `src/conductor-mode/objects/objectTypes.js`
+- `src/conductor-mode/objects/objectPlacementEngine.js`
 
 **Implementation details:**
 ```javascript
 // Key features to implement:
-- Note frequency calculation and mapping
-- Interval detection between any two notes
-- Chord recognition (major, minor, diminished, augmented)
-- Scale pattern detection
-- Real-time analysis of playing patterns
+- Base InteractiveObject class with position, size, type
+- Object types: Note (sphere), Chord (crystal), Scale (pathway)
+- Physics simulation for floating motion
+- Visual states: idle, hovering, touched, playing
+- Collision boundaries and interaction zones
 ```
 
 **Deliverables:**
-- Complete music theory calculation system
-- Unit tests for all theory functions
-- Integration with hand tracking data
+- Complete object system with different musical object types
+- Floating animation and physics
+- Visual feedback states
 
-#### Task 1.2: Hand-to-Note Mapping System
-**Files to modify:**
-- `src/conductor-mode/conductorController.js`
-- `src/conductor-mode/handNoteMapper.js` (new)
+#### Task 1.2: Collision Detection System
+**Files to create:**
+- `src/conductor-mode/interaction/collisionDetector.js`
+- `src/conductor-mode/interaction/handBoundaryChecker.js`
 
 **Implementation details:**
 ```javascript
-// Mapping requirements:
-- Left hand: C2-B3 (2 octaves, bass)
-- Right hand: C4-B5 (2 octaves, treble)
-- X-axis: note selection within octave
-- Y-axis: octave selection
-- Z-axis: velocity/volume
-- Smooth interpolation between notes
+// Requirements:
+- 3D collision detection (sphere-point collision)
+- Hand boundary checking (all landmarks in frame)
+- Confidence threshold for valid interactions
+- Multiple simultaneous collision support
+- Collision radius customization per object
 ```
 
 **Deliverables:**
-- Precise hand position to note mapping
-- Visual indicators for current notes
-- Smooth transitions between notes
+- Accurate collision detection with no false triggers
+- Immediate silence when hands leave frame
+- Visual indicators for out-of-bounds hands
 
-### Phase 2: Educational Systems (High Priority)
+### Phase 2: Object Placement & Interaction (High Priority)
 
-#### Task 2.1: Educational Visual System
+#### Task 2.1: Object Placement Engine
 **Files to create:**
-- `src/conductor-mode/educationalRenderer.js`
-- `src/conductor-mode/theoryVisualizer.js`
+- `src/conductor-mode/objects/placementPatterns.js`
+- `src/conductor-mode/objects/adaptivePlacement.js`
 
 **Features to implement:**
-- Interval bridges between hands
-- Chord shape visualization
-- Scale pattern indicators
-- Discovery celebration effects
-- Real-time theory display
+- Musical arrangement patterns (scales, chords, circle of fifths)
+- 3D spatial distribution algorithms
+- Adaptive placement based on player reach
+- Dynamic object spawning/despawning
+- Comfort zone detection
 
-#### Task 2.2: AI Teacher Integration
-**Files to create:**
-- `src/conductor-mode/aiTeacher.js`
-- `src/conductor-mode/aiResponseCache.js`
-- `src/conductor-mode/workers/ai-analysis-worker.js`
+#### Task 2.2: Enhanced Interaction System
+**Files to modify:**
+- `src/conductor/conductor.js` - Integrate new collision system
+- `src/conductor-mode/core/handNoteMapper.js` - Add collision-based mapping
 
 **Implementation approach:**
-1. Create Web Worker for non-blocking AI calls
-2. Implement response caching system
-3. Build contextual prompt generation
-4. Add precomputed fallback responses
-5. Integrate with Anthropic/OpenAI API
+1. Replace position-based note triggering with collision-based
+2. Add visual pre-feedback (glow) before audio
+3. Implement touch history tracking
+4. Add particle effects on collision
+5. Support multi-touch for chords
 
-**Key features:**
-- 5-second response time maximum
-- Context-aware suggestions
-- Celebration of discoveries
-- Progressive difficulty adjustment
+### Phase 3: Visual Enhancement (Medium Priority)
 
-### Phase 3: Game Systems (Medium Priority)
-
-#### Task 3.1: Discovery & Progress System
+#### Task 3.1: Object Rendering System
 **Files to create:**
-- `src/conductor-mode/progressTracker.js`
-- `src/conductor-mode/discoverySystem.js`
+- `src/conductor-mode/visuals/objectRenderer.js`
+- `src/conductor-mode/visuals/particleSystem.js`
 
 **Features:**
-- Track all musical discoveries
-- Unlock system for concepts
-- Achievement notifications
-- Progress persistence (localStorage)
-- Skill level estimation
+- 3D-like object rendering in 2D canvas
+- Glow effects and halos
+- Particle burst effects on touch
+- Object connection lines for intervals/chords
+- Smooth animations and transitions
 
-#### Task 3.2: Piano Audio System
+#### Task 3.2: Updated Educational Display
 **Files to modify:**
-- `src/conductor-mode/audioSystem.js`
-- Add piano sample loading
-- Implement proper note triggering
+- `src/conductor-mode/visuals/educationalRenderer.js`
+- `src/conductor-mode/visuals/theoryVisualizer.js`
 
-**Requirements:**
-- 88-key piano sample set
-- <50ms audio latency
-- Velocity sensitivity
-- Sustain pedal simulation
+**Updates needed:**
+- Show floating objects instead of piano keyboard
+- Display touch history
+- Visualize hand boundaries
+- Show object connections for musical relationships
 
-### Phase 4: Polish & Integration (Low Priority)
+### Phase 4: Integration & Polish (Low Priority)
 
-#### Task 4.1: Piano Discovery Garden Mode
-**Implementation:**
-- Free exploration always available
-- Guided moments every 30-60 seconds
-- Collection mechanics for discoveries
-- Integrated tutorial flow
+#### Task 4.1: Complete System Integration
+**Integration points:**
+- Hand tracking → Collision detection → Sound trigger
+- Object touches → Theory analysis → AI feedback
+- Visual feedback → Educational display → Progress tracking
 
-#### Task 4.2: Performance Optimization
+#### Task 4.2: Performance & Testing
 **Optimizations:**
-- Move theory calculations to Web Worker
-- Implement object pooling for visuals
-- Cache AI responses aggressively
-- Ensure consistent 60fps
+- Spatial partitioning for collision detection
+- Object pooling for performance
+- Efficient particle systems
+- 60fps maintenance with all systems
 
 ## Technical Implementation Guidelines
 
 ### Code Organization
 ```
 src/conductor-mode/
-├── core/
-│   ├── musicTheoryEngine.js
-│   ├── handNoteMapper.js
-│   └── musicalConstants.js
-├── educational/
-│   ├── aiTeacher.js
-│   ├── progressTracker.js
-│   └── discoverySystem.js
+├── objects/
+│   ├── interactiveObject.js
+│   ├── objectTypes.js
+│   ├── objectPlacementEngine.js
+│   ├── placementPatterns.js
+│   └── adaptivePlacement.js
+├── interaction/
+│   ├── collisionDetector.js
+│   └── handBoundaryChecker.js
 ├── visuals/
-│   ├── educationalRenderer.js
-│   └── theoryVisualizer.js
-├── workers/
-│   └── ai-analysis-worker.js
-└── modes/
-    └── pianoDiscoveryGarden.js
+│   ├── objectRenderer.js
+│   ├── particleSystem.js
+│   └── (existing visual files)
+└── (existing directories)
 ```
 
-### Integration Points
-1. **Hand Tracking → Note Mapping**
-   - Modify `updateHandGestures()` to include note calculation
-   - Add note trigger events to audio system
+### Key Implementation Details
 
-2. **Theory Engine → Visual System**
-   - Real-time analysis feeds visual indicators
-   - Discovery events trigger celebrations
+#### Collision Detection Algorithm
+```javascript
+// Sphere-point collision with confidence
+function detectCollision(handPoint, object) {
+  // Check hand is in bounds first
+  if (!isHandInBounds(handPoint)) return false;
+  
+  // 3D distance calculation
+  const distance = calculate3DDistance(handPoint, object.position);
+  
+  // Check if within collision radius
+  if (distance < object.collisionRadius) {
+    // Require high confidence
+    if (handPoint.confidence > 0.8) {
+      return true;
+    }
+  }
+  return false;
+}
+```
 
-3. **AI Teacher → UI**
-   - Non-blocking suggestions appear in UI
-   - Context updates trigger AI analysis
-
-4. **Progress → Game Mode**
-   - Discoveries unlock new challenges
-   - Skill level adjusts AI guidance
+#### Object State Management
+```javascript
+// Object states for visual feedback
+const OBJECT_STATES = {
+  IDLE: 'idle',           // Default floating
+  APPROACHING: 'approaching', // Hand nearby
+  TOUCHED: 'touched',     // Collision detected
+  PLAYING: 'playing',     // Sound active
+  FADING: 'fading'       // Post-touch fade
+};
+```
 
 ## Testing Requirements
 
-### Unit Tests
-- Music theory calculations
-- Hand position mappings
-- Discovery detection logic
-- AI prompt generation
+### Critical Tests
+1. **No Sound Out of Frame**
+   - Move hands completely out of view → silence
+   - Partial hand visibility → no triggers
+   - Return hands to frame → ready to play
 
-### Integration Tests
-- Hand tracking to audio pipeline
-- Theory analysis to visuals
-- AI response timing
-- Progress persistence
+2. **Precise Collision Detection**
+   - Touch object center → immediate sound
+   - Touch object edge → sound triggers
+   - Near miss → no sound
+   - Multiple touches → proper chord
 
-### Performance Tests
-- 60fps with all systems active
-- <100ms hand tracking latency
-- <50ms audio latency
-- <5s AI response time
+3. **Visual Feedback Timing**
+   - Glow starts ~50ms before audio
+   - Particles burst on contact
+   - Smooth state transitions
+
+### Performance Benchmarks
+- 60fps with 20+ objects and particles
+- <100ms touch-to-sound latency
+- <50ms hand tracking latency
+- No audio glitches or false triggers
+
+## Migration Strategy
+
+1. **Preserve Existing Systems**
+   - Keep theory engine, AI teacher, progress tracking
+   - Maintain discovery system and achievements
+   - Reuse visual effects where applicable
+
+2. **Gradual Integration**
+   - Start with object system in parallel
+   - Test collision detection separately
+   - Integrate with audio system
+   - Replace piano visualization
+
+3. **Backwards Compatibility**
+   - Option to switch between piano/objects
+   - Same musical learning goals
+   - Progress carries over
 
 ## Success Metrics
-- 80% of players discover a major chord in first session
-- 60% understand intervals after 30 minutes
-- Average session length: 20+ minutes
-- All educational features working smoothly
+- Zero false sound triggers
+- 100% silence when hands out of frame
+- Collision detection accuracy >99%
+- Same educational effectiveness as piano version
+- Improved engagement through 3D interaction
 
-## Implementation Order for Sonnet Agents
+## Implementation Order for AI Agents
 
-1. **Start with Music Theory Engine** - Foundation for everything
-2. **Implement Hand-to-Note Mapping** - Core interaction
-3. **Build Visual Learning System** - Immediate feedback
-4. **Add AI Teacher** - Educational guidance
-5. **Create Progress System** - Track learning
-6. **Polish with Game Mode** - Tie it all together
+1. **Create Interactive Object System** - Foundation for everything
+2. **Implement Collision Detection** - Core interaction mechanic
+3. **Add Hand Boundary Checking** - Critical for no-noise requirement
+4. **Build Object Placement Engine** - Musical arrangements
+5. **Enhance Visual Feedback** - Glow, particles, connections
+6. **Integrate with Existing Systems** - Theory, AI, progress
+7. **Polish and Optimize** - Performance and user experience
 
 Each task should be completed with:
 - Working implementation
-- Basic tests
+- Unit tests for critical paths
 - Integration with existing systems
-- Documentation of new features
+- Visual debugging tools
 
 ## Notes for Implementers
-- Always test with actual hand tracking
-- Ensure educational elements are fun, not preachy
-- Keep performance as top priority
-- Make discoveries feel magical
-- Test with music beginners for accessibility
+- Test extensively with hands moving in/out of frame
+- Ensure no sound leakage when hands not visible
+- Make collision areas generous but precise
+- Keep visual feedback delightful and responsive
+- Maintain 60fps performance target
+- Test with various hand sizes and positions

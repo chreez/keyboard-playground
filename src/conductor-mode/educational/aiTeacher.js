@@ -30,9 +30,10 @@ export class AITeacher {
     
     try {
       // Initialize Web Worker
-      this.worker = new Worker('/src/conductor-mode/workers/ai-analysis-worker.js', {
-        type: 'module'
-      });
+      this.worker = new Worker(
+        new URL('../workers/ai-analysis-worker.js', import.meta.url),
+        { type: 'module' }
+      );
       
       // Set up worker message handler
       this.worker.onmessage = this.handleWorkerMessage.bind(this);

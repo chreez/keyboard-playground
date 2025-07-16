@@ -1,8 +1,8 @@
 ---
 id: conductor-game
 title: Musical Conductor Educational Edition
-version: 2.0.2
-description: Hand-tracking piano learning game that teaches music theory through play with AI guidance
+version: 2.1.0
+description: Interactive object-based music learning game where players touch floating objects to create sounds and learn theory
 entry_points:
   - src/conductor-mode/index.html
   - src/conductor-mode/main.js
@@ -23,7 +23,10 @@ status: active
 ## Core Game Concept
 
 ### The Learning Loop
-Players use both hands to control piano notes - left hand controls bass notes (C2-B3), right hand controls treble notes (C4-B5). Visual feedback shows musical relationships in real-time while an AI teacher celebrates discoveries and suggests what to try next.
+Players use both hands to interact with musical objects floating in 3D space. Each object represents a different note or sound, and touching them with hand gestures triggers the corresponding audio. Visual feedback shows musical relationships in real-time while an AI teacher celebrates discoveries and suggests what to try next.
+
+### Interactive Sound Objects
+Instead of a traditional piano keyboard, the game space is populated with various interactive objects that produce sounds when "touched" by the player's hands. Objects are positioned in 3D space to encourage exploration and discovery of musical relationships.
 
 ### Educational Goals
 1. **Note recognition** - See notes, hear notes, feel notes
@@ -49,7 +52,8 @@ class MusicalEducatorEngine {
   constructor() {
     this.systems = {
       hands: new DualHandTracker(),      // Both hands tracked
-      piano: new VirtualPianoSystem(),   // 88-key virtual piano
+      objects: new InteractiveObjectSystem(), // Musical objects in 3D space
+      collision: new CollisionDetector(),     // Hand-object interaction
       theory: new MusicTheoryEngine(),   // Understands relationships
       ai: new AITeacherSystem(),         // LLM integration
       visuals: new EducationalRenderer(), // Shows theory visually
@@ -62,20 +66,51 @@ class MusicalEducatorEngine {
 
 ## Hand Control System
 
-### Dual Hand Mapping
+### Hand-Object Interaction
 ```javascript
-const HAND_MAPPING = {
-  left: {
-    range: ['C2', 'B3'],  // 2 octaves, bass clef
-    vertical: 'octave',   // Y-axis controls octave
-    horizontal: 'note',   // X-axis controls note
-    gesture: 'modifier'   // Gestures add effects
+const HAND_INTERACTION = {
+  detection: {
+    method: 'collision',      // Detect when hand touches object
+    radius: 50,              // Collision radius in pixels
+    depth: true,             // Use Z-axis for 3D interaction
+    gestures: ['point', 'pinch', 'palm'] // Valid interaction gestures
   },
-  right: {
-    range: ['C4', 'B5'],  // 2 octaves, treble clef
-    vertical: 'octave',   
-    horizontal: 'note',
-    gesture: 'modifier'
+  feedback: {
+    visual: 'glow',          // Objects glow when touched
+    haptic: 'vibration',     // Future: controller feedback
+    audio: 'immediate',      // Sound plays on contact
+    particle: 'burst'        // Particle effects on interaction
+  }
+};
+```
+
+### Interactive Object System
+```javascript
+const OBJECT_TYPES = {
+  // Basic note objects
+  note: {
+    shape: 'sphere',         // 3D sphere for single notes
+    size: { min: 40, max: 80 }, // Size indicates pitch
+    color: 'noteToColor',    // Color-coded by note
+    glow: 'onTouch',        // Glows when touched
+    physics: 'float'         // Gentle floating motion
+  },
+  
+  // Chord objects
+  chord: {
+    shape: 'crystal',        // Multi-faceted crystal
+    size: 100,              // Larger than single notes
+    color: 'chordType',     // Major=warm, Minor=cool
+    particles: 'shimmer',   // Shimmering particle effect
+    rotation: 'slow'        // Slowly rotating
+  },
+  
+  // Special objects
+  scale: {
+    shape: 'pathway',       // Series of connected objects
+    arrangement: 'spiral',  // Arranged in patterns
+    color: 'rainbow',       // Gradient colors
+    animation: 'pulse'      // Pulsing invitation
   }
 };
 ```
@@ -87,18 +122,52 @@ Screen Layout:
 │  🎼 Current Chord: C Major! 🎉          │  ← Real-time theory
 ├─────────────────────────────────────────┤
 │                                         │
-│    👋 Left Hand        Right Hand 👋    │  ← Hand visualization
-│    [Bass Notes]       [Treble Notes]    │
-│     ● C2               ● E4            │  ← Current notes
+│         🎵  🎶  🎵                      │  ← Musical objects
+│      ○    ◈    ○                       │     floating in 3D
+│   🎵    🎼    🎵   🎶                  │     space
+│     ○    ◆    ○    ○                   │
 │                                         │
+│    👋 Left Hand    Right Hand 👋        │  ← Hand positions
+│         ↓              ↓                │     with trails
 │  ╰═══════╤═══════╯                     │  ← Shows interval
 │      Major Third!                       │
 │                                         │
 ├─────────────────────────────────────────┤
-│  🎹 Virtual Piano (highlights playing)  │  ← Visual piano
+│  Recent: C·E·G → C Major Chord! 🎹     │  ← Touch history
 ├─────────────────────────────────────────┤
-│  💬 "Try moving your left hand up!"     │  ← AI suggestions
+│  💬 "Try touching the blue crystal!"    │  ← AI suggestions
 └─────────────────────────────────────────┘
+```
+
+### Object Placement System
+```javascript
+class ObjectPlacementEngine {
+  constructor() {
+    this.layout = {
+      // Objects arranged in musical patterns
+      notes: this.arrangeByScale(),
+      chords: this.arrangeByCircleOfFifths(),
+      special: this.arrangeByDifficulty()
+    };
+    
+    // Adaptive placement based on player reach
+    this.adaptToPlayerReach = true;
+    this.comfortZone = { radius: 300, depth: 200 };
+  }
+  
+  arrangeByScale() {
+    // C major scale objects in ascending spiral
+    return notes.map((note, i) => ({
+      position: {
+        x: Math.cos(i * 0.5) * 200,
+        y: 100 + i * 30,
+        z: Math.sin(i * 0.5) * 100
+      },
+      note: note,
+      size: 40 + (i * 5) // Higher notes are larger
+    }));
+  }
+}
 ```
 
 ## AI Teacher Integration
@@ -260,23 +329,63 @@ class TheoryVisualizer {
 }
 ```
 
+### Collision Detection System
+```javascript
+class CollisionDetector {
+  constructor() {
+    this.handBounds = {
+      inFrame: false,
+      confidence: 0,
+      boundaries: { left: 0.1, right: 0.9, top: 0.1, bottom: 0.9 }
+    };
+  }
+  
+  checkHandInBounds(handLandmarks) {
+    // All landmarks must be within frame boundaries
+    const allInBounds = handLandmarks.every(point => 
+      point.x > this.boundaries.left &&
+      point.x < this.boundaries.right &&
+      point.y > this.boundaries.top &&
+      point.y < this.boundaries.bottom
+    );
+    
+    // High confidence required for sound
+    const highConfidence = handLandmarks[0].visibility > 0.8;
+    
+    return allInBounds && highConfidence;
+  }
+  
+  detectCollision(handPos, object) {
+    // 3D distance calculation
+    const distance = Math.sqrt(
+      Math.pow(handPos.x - object.x, 2) +
+      Math.pow(handPos.y - object.y, 2) +
+      Math.pow(handPos.z - object.z, 2)
+    );
+    
+    return distance < object.collisionRadius;
+  }
+}
+```
+
 ### Silly Educational Moments
 
 1. **Emoji Rain for Scales**
-   - Play ascending C major scale
+   - Touch objects in ascending order
    - Rainbow emojis fall in order 🌈
    - Each note gets progressively happier emoji
 
 2. **Chord Creatures**
+   - Touch 3 objects simultaneously
    - Major chords spawn happy creatures 😊🐸
    - Minor chords spawn sad creatures 😢🐧
    - Diminished chords spawn nervous creatures 😰🦎
 
-3. **Interval Bridges**
-   - Visual bridges connect your hands
-   - Perfect fifth = strong golden bridge
-   - Tritone = wobbly red bridge
-   - Octave = rainbow bridge
+3. **Object Connections**
+   - Visual lines connect touched objects
+   - Perfect fifth = strong golden connection
+   - Tritone = wobbly red connection
+   - Octave = rainbow connection
 
 ## Performance Optimizations
 
@@ -368,15 +477,30 @@ Musical Conductor: Educational Edition transforms music theory from boring drill
 ### Input/Output Behaviors
 1. **Hand Tracking Input**
    - Input: MediaPipe hand landmarks (21 points per hand)
-   - Output: Musical notes mapped to hand positions (C2-B3 for left, C4-B5 for right)
-   - Success: <100ms latency from hand movement to note trigger
+   - Output: Musical notes triggered only when hands touch objects
+   - Success: <100ms latency from hand-object collision to note trigger
+   - **Critical**: NO sound when hands are out of frame or not touching objects
 
-2. **AI Teacher Responses**
+2. **Hand Detection Boundaries**
+   - Input: Hand position relative to camera frame
+   - Output: Sound enabled only when hands are fully visible
+   - Success: Immediate silence when hands leave frame
+   - Success: No false triggers from partial hand detection
+   - Success: Clear visual indicator when hands are "out of bounds"
+
+3. **Object Interaction**
+   - Input: Hand collision with musical objects
+   - Output: Precise sound trigger only on contact
+   - Success: No accidental triggers from nearby objects
+   - Success: Visual feedback (glow) precedes audio by ~50ms
+   - Success: Multiple simultaneous touches create proper chords
+
+4. **AI Teacher Responses**
    - Input: Musical context (notes, patterns, discoveries)
    - Output: Educational suggestions and celebrations
    - Success: Response within 5 seconds, contextually relevant
 
-3. **Visual Feedback**
+5. **Visual Feedback**
    - Input: Active notes and musical relationships
    - Output: Real-time theory visualization with emoji feedback
    - Success: 60 FPS rendering, clear visual indicators
@@ -406,6 +530,16 @@ Current implementation status:
 - ❌ Polish and integration (Phase 4)
 
 ## Changelog
+
+### [2.1.0] - 2025-07-16
+- **Major Update**: Transformed piano keyboard into interactive 3D objects
+- Added collision detection system for hand-object interaction
+- Added object placement engine with musical arrangement patterns
+- Enhanced success criteria with "no sound when hands out of frame" requirement
+- Added hand boundary detection to prevent false triggers
+- Updated visual system to show floating musical objects
+- Added object types: notes (spheres), chords (crystals), scales (pathways)
+- Improved interaction feedback with glow effects and particle bursts
 
 ### [2.0.2] - 2025-07-16
 - Added implementation status section
