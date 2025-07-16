@@ -5,6 +5,11 @@ import AudioSystem from '../audio/AudioSystem.js';
 import EmojiAnimator from '../animation/EmojiAnimator.js';
 import HandTracker from '../tracking/HandTracker.js';
 import { GestureRecognizer } from './gestures.js';
+import { MusicTheoryEngine } from '../conductor-mode/core/musicTheoryEngine.js';
+import { HandNoteMapper } from '../conductor-mode/core/handNoteMapper.js';
+import { EducationalRenderer } from '../conductor-mode/visuals/educationalRenderer.js';
+import { AITeacher } from '../conductor-mode/educational/aiTeacher.js';
+import { DiscoverySystem } from '../conductor-mode/educational/discoverySystem.js';
 
 export class ConductorController {
   constructor(isDebugMode = false) {
@@ -21,6 +26,11 @@ export class ConductorController {
     this.gestureRecognizer = null;
     this.audioSystem = null;
     this.emojiAnimator = null;
+    this.musicTheoryEngine = null;
+    this.handNoteMapper = null;
+    this.educationalRenderer = null;
+    this.aiTeacher = null;
+    this.discoverySystem = null;
     
     // State
     this.currentTheme = 'piano';
@@ -28,6 +38,8 @@ export class ConductorController {
     this.handPositions = [];
     this.lastGestureTime = 0;
     this.gestureCooldown = 200; // ms
+    this.activeNotes = new Map(); // MIDI note -> { timestamp, velocity, hand }
+    this.currentNoteMappings = { left: null, right: null };
     
     // Configuration
     this.config = {
@@ -130,6 +142,53 @@ export class ConductorController {
     this.emojiAnimator = new EmojiAnimator(canvas);
     this.emojiAnimator.start();
     
+    // Initialize music theory engine
+    this.musicTheoryEngine = new MusicTheoryEngine();
+    
+    // Initialize hand-to-note mapper
+    this.handNoteMapper = new HandNoteMapper();
+    
+    // Initialize educational renderer
+    this.educationalRenderer = new EducationalRenderer();
+    await this.educationalRenderer.init();
+    
+    // Initialize AI teacher
+    this.aiTeacher = new AITeacher();
+    await this.aiTeacher.init();
+    
+    // Set up AI teacher event handlers
+    this.aiTeacher.onSuggestionReceived((suggestion) => {
+      this.handleAISuggestion(suggestion);
+    });
+    
+    this.aiTeacher.onCelebrationTriggered((celebration) => {
+      this.handleAICelebration(celebration);
+    });
+    
+    this.aiTeacher.onErrorOccurred((error) => {
+      console.error('AI Teacher error:', error);
+    });
+    
+    // Initialize discovery system
+    this.discoverySystem = new DiscoverySystem();
+    
+    // Set up discovery system event handlers
+    this.discoverySystem.onDiscoveryMade((discovery) => {
+      this.handleDiscoveryMade(discovery);
+    });
+    
+    this.discoverySystem.onAchievementUnlocked((achievement) => {
+      this.handleAchievementUnlocked(achievement);
+    });
+    
+    this.discoverySystem.onCelebrationTriggered((celebration) => {
+      this.handleCelebrationTriggered(celebration);
+    });
+    
+    this.discoverySystem.onMilestoneReached((milestone) => {
+      this.handleMilestoneReached(milestone);
+    });
+    
     console.log('Core systems initialized');
   }
 
@@ -161,17 +220,23 @@ export class ConductorController {
   handleHandsDetected(hands) {
     this.handPositions = hands;
     
+    // Update note mappings for each hand
+    this.updateNoteMappings(hands);
+    
     // Update UI with hand tracking data
     this.emit('handsDetected', {
       handsDetected: hands.length,
       confidence: hands.length > 0 ? hands[0].confidence : 0,
-      activeGestures: this.activeGestures.map(g => g.type)
+      activeGestures: this.activeGestures.map(g => g.type),
+      noteMappings: this.currentNoteMappings
     });
   }
 
   handleHandsLost() {
     this.handPositions = [];
     this.activeGestures = [];
+    this.currentNoteMappings = { left: null, right: null };
+    this.activeNotes.clear();
     
     // Update UI
     this.emit('handsLost');
@@ -254,6 +319,11 @@ export class ConductorController {
         await this.handTracker.start();
       }
       
+      // Start educational renderer
+      if (this.educationalRenderer) {
+        this.educationalRenderer.start();
+      }
+      
       // Start the main loop
       this.isRunning = true;
       this.startMainLoop();
@@ -280,6 +350,16 @@ export class ConductorController {
       // Stop hand tracking
       if (this.handTracker) {
         await this.handTracker.stop();
+      }
+      
+      // Stop educational renderer
+      if (this.educationalRenderer) {
+        this.educationalRenderer.stop();
+      }
+      
+      // Stop AI teacher
+      if (this.aiTeacher) {
+        this.aiTeacher.destroy();
       }
       
       console.log('Conductor Controller stopped');
@@ -631,9 +711,331 @@ export class ConductorController {
     }
   }
 
+  updateNoteMappings(hands) {
+    if (!this.handNoteMapper || !hands || hands.length === 0) {
+      this.currentNoteMappings = { left: null, right: null };
+      return;
+    }
+
+    // Clear current mappings
+    this.currentNoteMappings = { left: null, right: null };
+
+    // Update note mappings for each hand
+    hands.forEach(hand => {
+      if (!hand.landmarks || hand.landmarks.length === 0) return;
+
+      const handedness = hand.handedness?.toLowerCase() || 'unknown';
+      if (handedness !== 'left' && handedness !== 'right') return;
+
+      // Map hand position to note
+      const noteMapping = this.handNoteMapper.mapHandToNote(
+        hand.landmarks,
+        handedness,
+        window.innerWidth,
+        window.innerHeight
+      );
+
+      if (noteMapping) {
+        this.currentNoteMappings[handedness] = noteMapping;
+
+        // Check if note should be triggered
+        const currentGesture = this.activeGestures.find(g => g.handedness === handedness);
+        if (this.handNoteMapper.shouldTriggerNote(noteMapping, currentGesture)) {
+          this.triggerNote(noteMapping, currentGesture);
+        }
+      }
+    });
+
+    // Analyze current musical context
+    this.analyzeMusicalContext();
+  }
+
+  triggerNote(noteMapping, gestureState) {
+    const { midi, velocity, handedness } = noteMapping;
+    
+    // Store active note
+    this.activeNotes.set(midi, {
+      timestamp: Date.now(),
+      velocity,
+      handedness,
+      gestureState
+    });
+    
+    // Track note with discovery system
+    if (this.discoverySystem) {
+      this.discoverySystem.trackNotePlayed();
+    }
+
+    // Trigger audio
+    if (this.audioSystem) {
+      // For now, map MIDI to characters for existing audio system
+      const character = this.midiToCharacter(midi);
+      if (gestureState?.type === 'palm') {
+        this.audioSystem.startSustainedNote(character);
+      } else {
+        this.audioSystem.playThemeSound(character);
+      }
+    }
+
+    // Trigger visual feedback
+    if (this.emojiAnimator) {
+      const position = this.handNoteMapper.getVisualPosition(
+        noteMapping,
+        window.innerWidth,
+        window.innerHeight
+      );
+      
+      if (position) {
+        const emoji = this.getNoteEmoji(noteMapping);
+        this.emojiAnimator.spawnEmoji(emoji, position.x, position.y);
+      }
+    }
+
+    // Emit note event
+    this.emit('noteTriggered', {
+      midi,
+      note: noteMapping.note,
+      octave: noteMapping.octave,
+      velocity,
+      handedness
+    });
+  }
+
+  midiToCharacter(midi) {
+    // Simple mapping for compatibility with existing audio system
+    const noteIndex = midi % 12;
+    const characters = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    return characters[noteIndex];
+  }
+
+  getNoteEmoji(noteMapping) {
+    // Return emoji based on note characteristics
+    const { note, octave, handedness } = noteMapping;
+    
+    // Different emojis for different hands
+    const leftHandEmojis = ['🎹', '🎼', '🎵', '🎶', '🎤'];
+    const rightHandEmojis = ['🎺', '🎻', '🎸', '🎷', '🎨'];
+    
+    const emojis = handedness === 'left' ? leftHandEmojis : rightHandEmojis;
+    return emojis[Math.floor(Math.random() * emojis.length)];
+  }
+
+  analyzeMusicalContext() {
+    if (!this.musicTheoryEngine || this.activeNotes.size === 0) return;
+
+    // Get current active MIDI notes
+    const activeNoteNumbers = Array.from(this.activeNotes.keys());
+    
+    // Analyze current musical context
+    const analysis = this.musicTheoryEngine.analyzeCurrentNotes(activeNoteNumbers);
+    
+    // Update AI teacher with current context
+    if (this.aiTeacher) {
+      this.aiTeacher.handleNoteChange(activeNoteNumbers);
+      
+      // Handle chord detection
+      if (analysis.chord) {
+        this.aiTeacher.handleChordDetection(analysis.chord);
+      }
+      
+      // Handle interval detection
+      if (analysis.intervals && analysis.intervals.length > 0) {
+        this.aiTeacher.handleIntervalDetection(analysis.intervals[0]);
+      }
+      
+      // Trigger analysis
+      this.aiTeacher.analyzeMusicalMoment();
+    }
+    
+    // Update educational renderer
+    if (this.educationalRenderer) {
+      this.educationalRenderer.updateAnalysis(analysis);
+      this.educationalRenderer.updateHandMappings(this.currentNoteMappings);
+      this.educationalRenderer.updateProgressStats(this.musicTheoryEngine.getProgressStats());
+    }
+    
+    // Emit analysis results
+    this.emit('musicalAnalysis', analysis);
+    
+    // Handle discoveries
+    if (analysis.discoveries && analysis.discoveries.length > 0) {
+      analysis.discoveries.forEach(discovery => {
+        this.handleDiscovery(discovery);
+      });
+    }
+  }
+
+  handleDiscovery(discovery) {
+    console.log('Musical discovery:', discovery);
+    
+    // Process discovery through discovery system
+    const processedDiscovery = this.discoverySystem?.processDiscovery(discovery);
+    
+    // Only proceed with new discoveries
+    if (!processedDiscovery) return;
+    
+    // Notify AI teacher of discovery
+    if (this.aiTeacher) {
+      this.aiTeacher.handleDiscovery(processedDiscovery);
+    }
+    
+    // Add discovery to educational renderer
+    if (this.educationalRenderer) {
+      this.educationalRenderer.addDiscovery(processedDiscovery);
+    }
+    
+    // Trigger celebration visual effects
+    if (this.emojiAnimator && processedDiscovery.celebration) {
+      const celebrationEmojis = processedDiscovery.teachingMoment?.celebration || ['🎉', '✨', '🌟'];
+      
+      // Spawn celebration emojis at random positions
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          const emoji = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
+          this.emojiAnimator.spawnEmoji(emoji, x, y);
+        }, i * 100);
+      }
+    }
+    
+    // Show teaching moment
+    if (this.educationalRenderer && processedDiscovery.teachingMoment) {
+      this.educationalRenderer.showTeachingMoment(processedDiscovery.teachingMoment);
+    }
+    
+    // Emit discovery event for UI
+    this.emit('discovery', processedDiscovery);
+  }
+
   off(event, callback) {
     if (this.eventListeners[event]) {
       this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
     }
+  }
+
+  // Handle AI teacher suggestion
+  handleAISuggestion(suggestion) {
+    console.log('AI suggestion:', suggestion);
+    
+    // Show suggestion in educational renderer
+    if (this.educationalRenderer) {
+      this.educationalRenderer.showTeachingMoment(suggestion);
+    }
+    
+    // Emit suggestion event
+    this.emit('aiSuggestion', suggestion);
+  }
+
+  // Handle AI teacher celebration
+  handleAICelebration(celebration) {
+    console.log('AI celebration:', celebration);
+    
+    // Trigger enhanced celebration effects
+    if (this.emojiAnimator && celebration.celebration) {
+      const celebrationEmojis = celebration.celebration;
+      
+      // Spawn more celebration emojis for AI-triggered celebrations
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          const emoji = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
+          this.emojiAnimator.spawnEmoji(emoji, x, y);
+        }, i * 150);
+      }
+    }
+    
+    // Emit celebration event
+    this.emit('aiCelebration', celebration);
+  }
+
+  // Handle discovery system events
+  handleDiscoveryMade(discovery) {
+    console.log('Discovery made:', discovery);
+    
+    // Update educational renderer with progress
+    if (this.educationalRenderer) {
+      this.educationalRenderer.updateProgressStats(this.discoverySystem.getProgress());
+    }
+    
+    // Emit discovery made event
+    this.emit('discoveryMade', discovery);
+  }
+
+  handleAchievementUnlocked(achievement) {
+    console.log('Achievement unlocked:', achievement);
+    
+    // Trigger special achievement celebration
+    if (this.emojiAnimator) {
+      const achievementEmojis = ['🏆', '🎖️', '🌟', '✨', achievement.emoji];
+      
+      // Spawn achievement emojis in a burst
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          const emoji = achievementEmojis[Math.floor(Math.random() * achievementEmojis.length)];
+          this.emojiAnimator.spawnEmoji(emoji, x, y);
+        }, i * 100);
+      }
+    }
+    
+    // Emit achievement event
+    this.emit('achievementUnlocked', achievement);
+  }
+
+  handleCelebrationTriggered(celebration) {
+    console.log('Celebration triggered:', celebration);
+    
+    // Emit celebration event
+    this.emit('celebration', celebration);
+  }
+
+  handleMilestoneReached(milestone) {
+    console.log('Milestone reached:', milestone);
+    
+    // Trigger milestone celebration
+    if (this.emojiAnimator && milestone.celebration) {
+      const milestoneEmojis = milestone.celebration;
+      
+      // Spawn milestone emojis in a special pattern
+      for (let i = 0; i < 15; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          const emoji = milestoneEmojis[Math.floor(Math.random() * milestoneEmojis.length)];
+          this.emojiAnimator.spawnEmoji(emoji, x, y);
+        }, i * 80);
+      }
+    }
+    
+    // Emit milestone event
+    this.emit('milestoneReached', milestone);
+  }
+
+  // Get current progress
+  getProgress() {
+    return this.discoverySystem?.getProgress() || null;
+  }
+
+  // Get session stats
+  getSessionStats() {
+    return this.discoverySystem?.getSessionStats() || null;
+  }
+
+  // Get recent discoveries
+  getRecentDiscoveries() {
+    return this.discoverySystem?.getRecentDiscoveries() || [];
+  }
+
+  // Get achievements
+  getAchievements() {
+    return this.discoverySystem?.getUnlockedAchievements() || [];
+  }
+
+  // Export progress
+  exportProgress() {
+    return this.discoverySystem?.exportProgress() || null;
   }
 }
