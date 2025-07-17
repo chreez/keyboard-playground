@@ -25,32 +25,47 @@ class ConductorApp {
 
   async init() {
     if (this.isInitialized) {
-      console.warn('ConductorApp already initialized');
+      console.warn('🎵 [ConductorApp] Already initialized');
       return;
     }
 
     try {
-      console.log('Initializing Conductor Mode...');
+      console.log('🎵 [ConductorApp] 🚀 Starting Conductor Mode initialization...');
+      console.log('🎵 [ConductorApp] Debug mode:', this.isDebugMode);
       
       // Initialize UI controller first
+      console.log('🎵 [ConductorApp] 1/3 Initializing UI Controller...');
       this.uiController = new UIController(this.isDebugMode);
       await this.uiController.init();
+      console.log('🎵 [ConductorApp] ✅ UI Controller initialized');
       
       // Initialize conductor controller
+      console.log('🎵 [ConductorApp] 2/3 Initializing Conductor Controller...');
       this.conductorController = new ConductorController(this.isDebugMode);
       await this.conductorController.init();
+      console.log('🎵 [ConductorApp] ✅ Conductor Controller initialized');
       
       // Set up event listeners
+      console.log('🎵 [ConductorApp] 3/3 Setting up event listeners...');
       this.setupEventListeners();
+      console.log('🎵 [ConductorApp] ✅ Event listeners set up');
       
       // Start the welcome sequence
+      console.log('🎵 [ConductorApp] Starting welcome sequence...');
       this.startWelcomeSequence();
       
       this.isInitialized = true;
-      console.log('Conductor Mode initialized successfully');
+      console.log('🎵 [ConductorApp] 🎉 Conductor Mode initialized successfully!');
       
     } catch (error) {
-      console.error('Failed to initialize Conductor Mode:', error);
+      console.error('🎵 [ConductorApp] ❌ INITIALIZATION FAILED:', error);
+      console.error('🎵 [ConductorApp] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        uiControllerExists: !!this.uiController,
+        conductorControllerExists: !!this.conductorController
+      });
       this.handleInitializationError(error);
     }
   }
@@ -175,21 +190,37 @@ class ConductorApp {
   }
 
   transitionToMainInterface() {
+    console.log('🎵 [ConductorApp] Transitioning to main interface...');
+    
     const welcomeScreen = document.getElementById('welcome-screen');
     const conductorInterface = document.getElementById('conductor-interface');
     
     if (welcomeScreen && conductorInterface) {
+      console.log('🎵 [ConductorApp] UI elements found, starting transition...');
+      
       // Fade out welcome screen
       welcomeScreen.classList.add('fade-out');
       
-      setTimeout(() => {
-        welcomeScreen.classList.add('hidden');
-        conductorInterface.classList.remove('hidden');
-        conductorInterface.classList.add('fade-in');
-        
-        // Start the conductor system
-        this.conductorController.start();
+      setTimeout(async () => {
+        try {
+          welcomeScreen.classList.add('hidden');
+          conductorInterface.classList.remove('hidden');
+          conductorInterface.classList.add('fade-in');
+          
+          // Start the conductor system
+          console.log('🎵 [ConductorApp] Starting conductor system...');
+          await this.conductorController.start();
+          console.log('🎵 [ConductorApp] ✅ Conductor system started successfully!');
+        } catch (error) {
+          console.error('🎵 [ConductorApp] ❌ Failed to start conductor system:', error);
+          this.handleStartupError(error);
+        }
       }, 500);
+    } else {
+      console.error('🎵 [ConductorApp] ❌ Required UI elements not found:', {
+        welcomeScreen: !!welcomeScreen,
+        conductorInterface: !!conductorInterface
+      });
     }
   }
 
@@ -214,9 +245,9 @@ class ConductorApp {
   }
 
   handleInitializationError(error) {
-    console.error('Conductor Mode initialization failed:', error);
+    console.error('🎵 [ConductorApp] ❌ Initialization failed:', error);
     
-    // Show error message to user
+    // Show detailed error message to user
     const welcomeScreen = document.getElementById('welcome-screen');
     if (welcomeScreen) {
       welcomeScreen.innerHTML = `
@@ -224,7 +255,26 @@ class ConductorApp {
         <div class="welcome-subtitle">Unable to start Conductor Mode</div>
         <div class="welcome-instructions">
           ${error.message}<br><br>
+          ${this.isDebugMode ? `<small>Debug info: ${error.stack}</small><br><br>` : ''}
           Press ESC to exit
+        </div>
+      `;
+    }
+  }
+  
+  handleStartupError(error) {
+    console.error('🎵 [ConductorApp] ❌ Startup failed:', error);
+    
+    // Show error in conductor interface
+    const conductorInterface = document.getElementById('conductor-interface');
+    if (conductorInterface) {
+      conductorInterface.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; background: rgba(0,0,0,0.8);">
+          <h2>⚠️ Startup Error</h2>
+          <p>Failed to start the Musical Educator Engine</p>
+          <p><small>${error.message}</small></p>
+          ${this.isDebugMode ? `<pre style="font-size: 10px; max-width: 80%; overflow: auto;">${error.stack}</pre>` : ''}
+          <p>Press ESC to exit</p>
         </div>
       `;
     }

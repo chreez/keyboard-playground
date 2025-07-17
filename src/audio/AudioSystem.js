@@ -8,6 +8,7 @@ class AudioSystem {
     this.sustainedNotes = new Map(); // Track held keys for sustained notes
     this.currentTheme = 2; // Default to keyboard position theme (was Theme 2, now Theme 2)
     this.effectsChains = new Map(); // Store effects chains for different themes
+    this.masterVolume = 0.8; // Default master volume
   }
 
   async initialize() {
@@ -39,6 +40,32 @@ class AudioSystem {
 
   getCurrentTheme() {
     return this.currentTheme;
+  }
+
+  setMasterVolume(volume) {
+    // Clamp volume between 0 and 1
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    
+    // Convert to decibels and apply to all effects chains
+    const dbValue = clampedVolume === 0 ? -Infinity : 20 * Math.log10(clampedVolume) - 6; // -6dB offset
+    
+    console.log(`🔊 [AudioSystem] Setting master volume to ${volume} (${dbValue.toFixed(1)}dB)`);
+    
+    this.effectsChains.forEach((chain, theme) => {
+      if (chain.volume) {
+        chain.volume.volume.value = dbValue;
+      }
+    });
+    
+    // Store the volume for future theme switches
+    this.masterVolume = clampedVolume;
+  }
+
+  applyMasterVolumeToChain(volumeNode) {
+    if (volumeNode && this.masterVolume !== undefined) {
+      const dbValue = this.masterVolume === 0 ? -Infinity : 20 * Math.log10(this.masterVolume) - 6;
+      volumeNode.volume.value = dbValue;
+    }
   }
 
   setupSynths() {
@@ -74,6 +101,9 @@ class AudioSystem {
     
     reverb.chain(volume, Tone.getDestination());
     this.effectsChains.set('theme2', { reverb, volume });
+    
+    // Apply current master volume
+    this.applyMasterVolumeToChain(volume);
     
     synthTypes.forEach(type => {
       const pool = [];
@@ -140,6 +170,9 @@ class AudioSystem {
     distortion.chain(chorus, delay, reverb, volume, Tone.getDestination());
     
     this.effectsChains.set('theme3', { distortion, chorus, delay, reverb, volume });
+    
+    // Apply current master volume
+    this.applyMasterVolumeToChain(volume);
     
     synthTypes.forEach(type => {
       const pool = [];

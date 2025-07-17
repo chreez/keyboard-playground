@@ -261,6 +261,32 @@ import { UIController } from './ui'; // Handles prod vs debug UI
       "showPerformance": true,
       "consoleLogging": true,
       "showTelemetry": true
+    },
+    "logging": {
+      "enabled": true,
+      "level": "debug",  // error, warn, info, debug, trace
+      "systems": {
+        "initialization": true,
+        "handTracking": true,
+        "audioSystem": true,
+        "gestureRecognition": true,
+        "interactiveObjects": true,
+        "musicTheory": true,
+        "visualEffects": true,
+        "performance": true,
+        "errors": true
+      },
+      "format": {
+        "timestamps": true,
+        "systemIcons": true,  // Use emoji prefixes for each system
+        "verbose": true,      // Include full object details
+        "stackTraces": true   // For errors
+      },
+      "realtime": {
+        "enabled": true,
+        "maxMessages": 1000,  // Console buffer size
+        "debounceMs": 50      // Avoid log spam
+      }
     }
   }
 }

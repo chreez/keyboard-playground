@@ -61,45 +61,61 @@ export class ConductorController {
 
   async init() {
     if (this.isInitialized) {
-      console.warn('ConductorController already initialized');
+      console.warn('🎼 [ConductorController] Already initialized');
       return;
     }
 
     try {
-      console.log('Initializing Conductor Controller with Musical Educator Engine...');
+      console.log('🎼 [ConductorController] 🚀 Starting initialization...');
+      console.log('🎼 [ConductorController] Debug mode:', this.isDebugMode);
+      console.log('🎼 [ConductorController] Canvas size:', window.innerWidth, 'x', window.innerHeight);
       
       // Initialize the new Musical Educator Engine
+      console.log('🎼 [ConductorController] Creating Musical Educator Engine...');
       this.musicalEngine = new MusicalEducatorEngine({
         debug: this.isDebugMode,
         canvas: { width: window.innerWidth, height: window.innerHeight }
       });
       
+      console.log('🎼 [ConductorController] Initializing Musical Educator Engine...');
       await this.musicalEngine.init();
+      console.log('🎼 [ConductorController] ✅ Musical Educator Engine initialized');
       
       // Initialize legacy gesture recognizer for fallback
+      console.log('🎼 [ConductorController] Initializing gesture recognizer...');
       this.gestureRecognizer = new GestureRecognizer({
         confidenceThreshold: this.config.gestures.confidenceThreshold,
         cooldownPeriod: this.config.gestures.cooldown,
         velocityThreshold: this.config.gestures.velocityThreshold
       });
+      console.log('🎼 [ConductorController] ✅ Gesture recognizer initialized');
       
       // Set up event listeners
+      console.log('🎼 [ConductorController] Setting up event listeners...');
       this.setupEventListeners();
+      console.log('🎼 [ConductorController] ✅ Event listeners set up');
       
       this.isInitialized = true;
-      console.log('Conductor Controller initialized successfully');
+      console.log('🎼 [ConductorController] 🎉 Initialization complete!');
       
     } catch (error) {
-      console.error('Failed to initialize Conductor Controller:', error);
+      console.error('🎼 [ConductorController] ❌ INITIALIZATION FAILED:', error);
+      console.error('🎼 [ConductorController] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       throw error;
     }
   }
 
   setupEventListeners() {
+    console.log('🎼 [ConductorController] Setting up Musical Engine event listeners...');
+    
     // Musical Engine Events
     if (this.musicalEngine) {
       this.musicalEngine.on('systemReady', (data) => {
-        console.log('Musical Educator Engine ready:', data);
+        console.log('🎼 [ConductorController] ✅ Musical Educator Engine ready:', data);
         this.emit('systemReady', data);
       });
       
@@ -131,17 +147,20 @@ export class ConductorController {
       });
       
       this.musicalEngine.on('error', (data) => {
-        console.error('Musical Engine error:', data);
+        console.error('🎼 [ConductorController] ❌ Musical Engine error:', data);
         this.emit('error', data);
       });
+    } else {
+      console.warn('🎼 [ConductorController] ⚠️  No musical engine available for events');
     }
     
     // Set up keyboard event listeners for theme switching, etc.
+    console.log('🎼 [ConductorController] Setting up keyboard event listeners...');
     document.addEventListener('keydown', (event) => {
       this.handleKeyboardInput(event);
     });
     
-    console.log('Event listeners set up');
+    console.log('🎼 [ConductorController] ✅ All event listeners set up');
   }
 
   // Handle hands detected (legacy compatibility)
@@ -232,28 +251,40 @@ export class ConductorController {
   // Start the controller
   async start() {
     if (!this.isInitialized) {
-      throw new Error('ConductorController not initialized');
+      const error = new Error('ConductorController not initialized');
+      console.error('🎼 [ConductorController] ❌ Cannot start: not initialized');
+      throw error;
     }
     
     if (this.isRunning) {
-      console.warn('ConductorController already running');
+      console.warn('🎼 [ConductorController] Already running');
       return;
     }
     
     try {
-      console.log('Starting Conductor Controller...');
+      console.log('🎼 [ConductorController] 🚀 Starting controller...');
       
       // Start the musical engine
       if (this.musicalEngine) {
+        console.log('🎼 [ConductorController] Starting musical engine...');
         await this.musicalEngine.start();
+        console.log('🎼 [ConductorController] ✅ Musical engine started');
+      } else {
+        console.error('🎼 [ConductorController] ❌ No musical engine available!');
+        throw new Error('Musical engine not available');
       }
       
       this.isRunning = true;
-      
-      console.log('Conductor Controller started successfully');
+      console.log('🎼 [ConductorController] 🎉 Controller started successfully!');
       
     } catch (error) {
-      console.error('Failed to start Conductor Controller:', error);
+      console.error('🎼 [ConductorController] ❌ START FAILED:', error);
+      console.error('🎼 [ConductorController] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        musicalEngineExists: !!this.musicalEngine,
+        isInitialized: this.isInitialized
+      });
       throw error;
     }
   }
@@ -304,6 +335,36 @@ export class ConductorController {
     }
     console.log('Conductor Controller resumed');
   }
+  // Recalibrate hand tracking (legacy compatibility)
+  recalibrateHandTracking() {
+    console.log('Recalibrating hand tracking...');
+    if (this.musicalEngine && this.musicalEngine.systems.hands) {
+      // Reset hand tracking system
+      this.musicalEngine.systems.hands.stop().then(() => {
+        this.musicalEngine.systems.hands.start();
+      });
+    }
+  }
+  
+  // Handle keyboard fallback (legacy compatibility)
+  handleKeyboardFallback(key) {
+    console.log(`Keyboard fallback: ${key}`);
+    
+    // Trigger audio through musical engine
+    if (this.musicalEngine && this.musicalEngine.systems.audio) {
+      this.musicalEngine.systems.audio.playThemeSound(key);
+    }
+    
+    // Spawn emoji at center of screen
+    if (this.musicalEngine && this.musicalEngine.systems.emoji) {
+      this.musicalEngine.systems.emoji.spawnEmoji(
+        key,
+        window.innerWidth / 2,
+        window.innerHeight / 2
+      );
+    }
+  }
+
   // Get system status
   getSystemStatus() {
     if (this.musicalEngine) {

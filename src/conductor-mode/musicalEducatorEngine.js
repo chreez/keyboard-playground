@@ -4,7 +4,7 @@ import { AITeacher } from './educational/aiTeacher.js';
 import { EducationalRenderer } from './visuals/educationalRenderer.js';
 import { DiscoverySystem } from './educational/discoverySystem.js';
 import { ProgressTracker } from './educational/progressTracker.js';
-import { DualHandTracker } from '../tracking/HandTracker.js';
+import HandTracker from '../tracking/HandTracker.js';
 import AudioSystem from '../audio/AudioSystem.js';
 import EmojiAnimator from '../animation/EmojiAnimator.js';
 
@@ -108,21 +108,26 @@ export class MusicalEducatorEngine {
     }
     
     try {
-      console.log('Initializing Musical Educator Engine...');
+      console.log('🎵 [MusicalEducatorEngine] Starting initialization...');
+      console.log('🎵 [MusicalEducatorEngine] Config:', JSON.stringify(this.config, null, 2));
       
       this.state.sessionStartTime = Date.now();
       
       // Initialize systems in dependency order
+      console.log('🎵 [MusicalEducatorEngine] Initializing core systems...');
       await this.initializeCoreSystemsSequentially();
       
       // Setup inter-system communication
+      console.log('🎵 [MusicalEducatorEngine] Setting up system communication...');
       this.setupSystemCommunication();
       
       // Setup event handlers
+      console.log('🎵 [MusicalEducatorEngine] Setting up event handlers...');
       this.setupEventHandlers();
       
       this.isInitialized = true;
-      console.log('Musical Educator Engine initialized successfully');
+      console.log('🎵 [MusicalEducatorEngine] ✅ Initialization complete!');
+      console.log('🎵 [MusicalEducatorEngine] Active systems:', Object.keys(this.systems).filter(key => this.systems[key] !== null));
       
       this.emit('systemReady', {
         timestamp: Date.now(),
@@ -130,7 +135,8 @@ export class MusicalEducatorEngine {
       });
       
     } catch (error) {
-      console.error('Failed to initialize Musical Educator Engine:', error);
+      console.error('🎵 [MusicalEducatorEngine] ❌ INITIALIZATION FAILED:', error);
+      console.error('🎵 [MusicalEducatorEngine] Error stack:', error.stack);
       this.emit('error', { type: 'initialization', error });
       throw error;
     }
@@ -138,75 +144,156 @@ export class MusicalEducatorEngine {
   
   // Initialize core systems in sequence
   async initializeCoreSystemsSequentially() {
-    // 1. Initialize Hand Tracking
-    console.log('Initializing Hand Tracking...');
-    this.systems.hands = new DualHandTracker();
-    await this.systems.hands.init({
-      maxHands: this.config.handTracking.maxHands,
-      minDetectionConfidence: this.config.handTracking.minDetectionConfidence,
-      minTrackingConfidence: this.config.handTracking.minTrackingConfidence,
-      showLandmarks: this.config.debug
-    });
-    
-    // 2. Initialize Interactive Object System
-    console.log('Initializing Interactive Object System...');
-    this.systems.objects = new InteractiveObjectSystem({
-      canvas: this.config.canvas,
-      confidenceThreshold: this.config.handTracking.minDetectionConfidence,
-      enableCollisionFeedback: true,
-      soundEnabled: this.config.audio.enabled
-    });
-    await this.systems.objects.init();
-    
-    // 3. Initialize Music Theory Engine
-    console.log('Initializing Music Theory Engine...');
-    this.systems.theory = new MusicTheoryEngine();
-    
-    // 4. Initialize Audio System
-    if (this.config.audio.enabled) {
-      console.log('Initializing Audio System...');
-      this.systems.audio = new AudioSystem();
-      await this.systems.audio.initialize();
-      this.systems.audio.setTheme(2); // Piano theme
-      this.systems.audio.setMasterVolume(this.config.audio.masterVolume);
-    }
-    
-    // 5. Initialize Visual Systems
-    if (this.config.visuals.enabled) {
-      console.log('Initializing Visual Systems...');
+    try {
+      // 1. Initialize Hand Tracking
+      console.log('🎵 [MusicalEducatorEngine] 1/6 Initializing Hand Tracking...');
+      console.log('🎵 [MusicalEducatorEngine] Hand tracking config:', {
+        maxHands: this.config.handTracking.maxHands,
+        minDetectionConfidence: this.config.handTracking.minDetectionConfidence,
+        minTrackingConfidence: this.config.handTracking.minTrackingConfidence,
+        showLandmarks: this.config.debug
+      });
       
-      // Educational Renderer
-      this.systems.visuals = new EducationalRenderer();
-      await this.systems.visuals.init();
+      this.systems.hands = new HandTracker();
+      console.log('🎵 [MusicalEducatorEngine] Created HandTracker instance');
       
-      // Emoji Animator
-      const emojiCanvas = this.createEmojiCanvas();
-      this.systems.emoji = new EmojiAnimator(emojiCanvas);
-      this.systems.emoji.start();
-    }
+      await this.systems.hands.init({
+        maxHands: this.config.handTracking.maxHands,
+        minDetectionConfidence: this.config.handTracking.minDetectionConfidence,
+        minTrackingConfidence: this.config.handTracking.minTrackingConfidence,
+        showLandmarks: this.config.debug
+      });
+      console.log('🎵 [MusicalEducatorEngine] ✅ Hand Tracking initialized');
     
-    // 6. Initialize Educational Systems
-    if (this.config.education.enabled) {
-      console.log('Initializing Educational Systems...');
-      
-      // Discovery System
-      if (this.config.education.discoveryTrackingEnabled) {
-        this.systems.discovery = new DiscoverySystem();
+      // 2. Initialize Interactive Object System
+      console.log('🎵 [MusicalEducatorEngine] 2/6 Initializing Interactive Object System...');
+      this.systems.objects = new InteractiveObjectSystem({
+        canvas: this.config.canvas,
+        confidenceThreshold: this.config.handTracking.minDetectionConfidence,
+        enableCollisionFeedback: true,
+        soundEnabled: this.config.audio.enabled
+      });
+      await this.systems.objects.init();
+      console.log('🎵 [MusicalEducatorEngine] ✅ Interactive Object System initialized');
+    
+      // 3. Initialize Music Theory Engine
+      console.log('🎵 [MusicalEducatorEngine] 3/6 Initializing Music Theory Engine...');
+      this.systems.theory = new MusicTheoryEngine();
+      console.log('🎵 [MusicalEducatorEngine] ✅ Music Theory Engine initialized');
+    
+      // 4. Initialize Audio System
+      if (this.config.audio.enabled) {
+        console.log('🎵 [MusicalEducatorEngine] 4/6 Initializing Audio System...');
+        console.log('🎵 [MusicalEducatorEngine] Audio config:', {
+          enabled: this.config.audio.enabled,
+          masterVolume: this.config.audio.masterVolume,
+          theme: this.config.audio.theme
+        });
+        
+        this.systems.audio = new AudioSystem();
+        console.log('🎵 [MusicalEducatorEngine] Created AudioSystem instance');
+        
+        await this.systems.audio.initialize();
+        console.log('🎵 [MusicalEducatorEngine] AudioSystem initialized, setting theme...');
+        
+        this.systems.audio.setTheme(2); // Piano theme
+        console.log('🎵 [MusicalEducatorEngine] Theme set to piano (2)');
+        
+        console.log('🎵 [MusicalEducatorEngine] Setting master volume:', this.config.audio.masterVolume);
+        this.systems.audio.setMasterVolume(this.config.audio.masterVolume);
+        console.log('🎵 [MusicalEducatorEngine] ✅ Audio System fully initialized');
+      } else {
+        console.log('🎵 [MusicalEducatorEngine] ⚠️  Audio System disabled in config');
+      }
+    
+      // 5. Initialize Visual Systems
+      if (this.config.visuals.enabled) {
+        console.log('🎵 [MusicalEducatorEngine] 5/6 Initializing Visual Systems...');
+        
+        // Educational Renderer
+        this.systems.visuals = new EducationalRenderer();
+        await this.systems.visuals.init();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Educational Renderer initialized');
+        
+        // Emoji Animator
+        const emojiCanvas = this.createEmojiCanvas();
+        this.systems.emoji = new EmojiAnimator(emojiCanvas);
+        this.systems.emoji.start();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Emoji Animator initialized');
+      } else {
+        console.log('🎵 [MusicalEducatorEngine] ⚠️  Visual Systems disabled in config');
+      }
+    
+      // 6. Initialize Educational Systems
+      if (this.config.education.enabled) {
+        console.log('🎵 [MusicalEducatorEngine] 6/6 Initializing Educational Systems...');
+        
+        // Discovery System
+        if (this.config.education.discoveryTrackingEnabled) {
+          this.systems.discovery = new DiscoverySystem();
+          console.log('🎵 [MusicalEducatorEngine] ✅ Discovery System initialized');
+        }
+        
+        // Progress Tracker
+        if (this.config.education.progressTrackingEnabled) {
+          this.systems.progress = new ProgressTracker();
+          console.log('🎵 [MusicalEducatorEngine] ✅ Progress Tracker initialized');
+        }
+        
+        // AI Teacher (initialize last due to dependencies)
+        if (this.config.education.aiTeacherEnabled) {
+          this.systems.ai = new AITeacher();
+          await this.systems.ai.init();
+          console.log('🎵 [MusicalEducatorEngine] ✅ AI Teacher initialized');
+        }
+      } else {
+        console.log('🎵 [MusicalEducatorEngine] ⚠️  Educational Systems disabled in config');
       }
       
-      // Progress Tracker
-      if (this.config.education.progressTrackingEnabled) {
-        this.systems.progress = new ProgressTracker();
+      console.log('🎵 [MusicalEducatorEngine] ✅ All systems initialized successfully');
+    } catch (error) {
+      console.error('🎵 [MusicalEducatorEngine] ❌ System initialization failed:', error);
+      console.error('🎵 [MusicalEducatorEngine] Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        systemsInitialized: Object.keys(this.systems).filter(key => this.systems[key] !== null)
+      });
+      
+      // Try to determine which system failed
+      const failedSystem = this.determineFailedSystem(error);
+      if (failedSystem) {
+        console.error('🎵 [MusicalEducatorEngine] Failed during:', failedSystem);
       }
       
-      // AI Teacher (initialize last due to dependencies)
-      if (this.config.education.aiTeacherEnabled) {
-        this.systems.ai = new AITeacher();
-        await this.systems.ai.init();
-      }
+      throw error;
     }
-    
-    console.log('All systems initialized successfully');
+  }
+
+  determineFailedSystem(error) {
+    const message = error.message.toLowerCase();
+    if (message.includes('handtracker') || message.includes('hand tracking')) {
+      return 'Hand Tracking System';
+    }
+    if (message.includes('interactiveobjectsystem') || message.includes('objects')) {
+      return 'Interactive Object System';
+    }
+    if (message.includes('musictheoryengine') || message.includes('theory')) {
+      return 'Music Theory Engine';
+    }
+    if (message.includes('audiosystem') || message.includes('audio') || message.includes('setmastervolume')) {
+      return 'Audio System';
+    }
+    if (message.includes('educationalrenderer') || message.includes('visuals')) {
+      return 'Visual Systems';
+    }
+    if (message.includes('emojianimator') || message.includes('emoji')) {
+      return 'Emoji Animation System';
+    }
+    if (message.includes('aiteacher') || message.includes('discovery') || message.includes('progress')) {
+      return 'Educational Systems';
+    }
+    return null;
   }
   
   // Setup communication between systems
@@ -318,36 +405,43 @@ export class MusicalEducatorEngine {
     }
     
     if (this.isRunning) {
-      console.warn('MusicalEducatorEngine already running');
+      console.warn('🎵 [MusicalEducatorEngine] Already running');
       return;
     }
     
     try {
-      console.log('Starting Musical Educator Engine...');
+      console.log('🎵 [MusicalEducatorEngine] 🚀 Starting engine...');
       
       // Start hand tracking
       if (this.systems.hands) {
+        console.log('🎵 [MusicalEducatorEngine] Starting hand tracking...');
         await this.systems.hands.start();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Hand tracking started');
       }
       
       // Start object system
       if (this.systems.objects) {
+        console.log('🎵 [MusicalEducatorEngine] Starting object system...');
         this.systems.objects.start();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Object system started');
       }
       
       // Start visual systems
       if (this.systems.visuals) {
+        console.log('🎵 [MusicalEducatorEngine] Starting visual systems...');
         this.systems.visuals.start();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Visual systems started');
       }
       
       // Start main loop
       this.isRunning = true;
       this.startMainLoop();
       
-      console.log('Musical Educator Engine started successfully');
+      console.log('🎵 [MusicalEducatorEngine] 🎉 Engine started successfully!');
       
     } catch (error) {
-      console.error('Failed to start Musical Educator Engine:', error);
+      console.error('🎵 [MusicalEducatorEngine] ❌ STARTUP FAILED:', error);
+      console.error('🎵 [MusicalEducatorEngine] Error stack:', error.stack);
       this.emit('error', { type: 'startup', error });
       throw error;
     }
