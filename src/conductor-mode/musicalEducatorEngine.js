@@ -7,6 +7,7 @@ import { ProgressTracker } from './educational/progressTracker.js';
 import HandTracker from '../tracking/HandTracker.js';
 import AudioSystem from '../audio/AudioSystem.js';
 import EmojiAnimator from '../animation/EmojiAnimator.js';
+import { ObjectRenderer } from './visuals/objectRenderer.js';
 
 export class MusicalEducatorEngine {
   constructor(options = {}) {
@@ -51,6 +52,7 @@ export class MusicalEducatorEngine {
       theory: null,          // MusicTheoryEngine
       ai: null,              // AITeacherSystem
       visuals: null,         // EducationalRenderer
+      objectRenderer: null,  // ObjectRenderer
       audio: null,           // PianoAudioSystem
       progress: null,        // LearningTracker
       discovery: null,       // DiscoverySystem
@@ -214,6 +216,12 @@ export class MusicalEducatorEngine {
         this.systems.visuals = new EducationalRenderer();
         await this.systems.visuals.init();
         console.log('🎵 [MusicalEducatorEngine] ✅ Educational Renderer initialized');
+
+        // Object Renderer
+        const objectCanvas = this.createObjectCanvas();
+        this.systems.objectRenderer = new ObjectRenderer(this.systems.objects, { canvas: objectCanvas });
+        this.systems.objectRenderer.init();
+        console.log('🎵 [MusicalEducatorEngine] ✅ Object Renderer initialized');
         
         // Emoji Animator
         const emojiCanvas = this.createEmojiCanvas();
@@ -397,6 +405,28 @@ export class MusicalEducatorEngine {
     
     return canvas;
   }
+
+  // Create canvas for object rendering
+  createObjectCanvas() {
+    const canvas = document.createElement('canvas');
+    canvas.width = this.config.canvas.width;
+    canvas.height = this.config.canvas.height;
+    canvas.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+    `;
+    document.body.appendChild(canvas);
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+    return canvas;
+  }
   
   // Start the engine
   async start() {
@@ -431,6 +461,11 @@ export class MusicalEducatorEngine {
         console.log('🎵 [MusicalEducatorEngine] Starting visual systems...');
         this.systems.visuals.start();
         console.log('🎵 [MusicalEducatorEngine] ✅ Visual systems started');
+      }
+
+      // Start object renderer
+      if (this.systems.objectRenderer) {
+        this.systems.objectRenderer.start();
       }
       
       // Start main loop
@@ -472,6 +507,10 @@ export class MusicalEducatorEngine {
       // Stop visual systems
       if (this.systems.visuals) {
         this.systems.visuals.stop();
+      }
+
+      if (this.systems.objectRenderer) {
+        this.systems.objectRenderer.stop();
       }
       
       // Clear active notes
